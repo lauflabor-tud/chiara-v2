@@ -1,4 +1,14 @@
+# Django
 *.log
 *.pot
 *.pyc
 local_settings.py
+
+# Linux temporary files
+*~
+*.swp
+*.swo
+
+# Local data
+src/chiara/settings.py
+src/chiara/wsgi.py
