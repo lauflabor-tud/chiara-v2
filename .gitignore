@@ -4,11 +4,17 @@
 *.pyc
 local_settings.py
 
-# Linux temporary files
+# Temporary Linux files
 *~
 *.swp
 *.swo
 
+# Local IDE files
+.idea
+.project
+.pydevproject
+
 # Local data
+*migrations
 src/chiara/settings.py
 src/chiara/wsgi.py
