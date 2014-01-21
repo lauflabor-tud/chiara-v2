@@ -1,0 +1,3 @@
+-r requirements/common.txt
+-r requirements/development.txt
+-r requirements/test.txt

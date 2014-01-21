@@ -16,5 +16,5 @@ local_settings.py
 
 # Local data
 *migrations
-src/chiara/settings.py
+src/chiara/settings/local.py
 src/chiara/wsgi.py
