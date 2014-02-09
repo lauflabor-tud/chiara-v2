@@ -1,0 +1,12 @@
+{% block title %}{{ list_collections }}{% endblock %}
+
+{% block content %}
+<h2>List all collections: </h2>
+
+{% for c in collections %}
+	{% if c.revision == 1 %}
+   		<li> {{ c.directory.name }} (ID: {{ c.identifier }})</li>
+   	{% endif %}
+{% endfor %}
+
+{% endblock %}

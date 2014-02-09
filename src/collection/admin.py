@@ -1,5 +1,26 @@
 from django.contrib import admin
-from .models import Collection, CollectionRelation
+from .models import Collection, Directory, File, Tag
 
-admin.site.register(Collection)
-admin.site.register(CollectionRelation)
+
+class CollectionAdmin(admin.ModelAdmin):
+    """The CollectionAdmin is responsible for the look and feel of
+    the collection admin window."""
+    
+    filter_horizontal = ('authors', 'tags',)
+
+
+
+class DirectoryAdmin(admin.ModelAdmin):
+    """The DirectoryAdmin is responsible for the look and feel of
+    the directory admin window."""
+
+    filter_horizontal = ('files', 'sub_directories')
+
+
+
+
+# Register all modules
+admin.site.register(Collection, CollectionAdmin)
+admin.site.register(Directory, DirectoryAdmin)
+admin.site.register(File)
+admin.site.register(Tag)
