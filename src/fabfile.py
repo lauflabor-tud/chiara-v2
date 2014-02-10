@@ -1,6 +1,7 @@
 from fabric.api import lcd, local
 import os, shutil
 from chiara.settings.common import SITE_ROOT
+from chiara.settings.local import ROOT_PERMISSION
 
 # Print variables
 RESET_MYSQL = """
@@ -33,8 +34,8 @@ def refresh():
     Refreshs the apache server with updated data of the project.
     """
     with lcd(SITE_ROOT):
-        local('python manage.py syncdb')
-        local('python manage.py collectstatic')
+        local(__get_sudo() + 'python manage.py syncdb')
+        local(__get_sudo() + 'python manage.py collectstatic')
         local('sudo service apache2 restart')
         
         
@@ -55,10 +56,17 @@ def reset_db():
         for app in main_apps:
             if(os.path.exists(os.path.join(SITE_ROOT, app, 'migrations'))):
                 shutil.rmtree(os.path.join(SITE_ROOT, app, 'migrations'))
-            local('python manage.py schemamigration ' + app + ' --initial')  
-        local('python manage.py syncdb')  
+            local(__get_sudo() + 'python manage.py schemamigration ' + app + ' --initial')  
+        local(__get_sudo() + 'python manage.py syncdb')  
         for app in main_apps:
-            local('python manage.py migrate ' + app)
+            local(__get_sudo() + 'python manage.py migrate ' + app)
         print CREATE_SUPERUSER
-        local('python manage.py createsuperuser')
+        local(__get_sudo() + 'python manage.py createsuperuser')
+
+
+def __get_sudo():
+    if(ROOT_PERMISSION):
+        return 'sudo '
+    else:
+        return ''
         
