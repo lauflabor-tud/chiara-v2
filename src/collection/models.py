@@ -73,7 +73,7 @@ class Directory(models.Model):
         return len(self.parent_directory.all())==0
         
     def __unicode__(self):
-        return 'ID: %d | Revision: %d | Name: %s)' % (self.identifier, 
+        return 'ID: %d | Revision: %d | Name: %s' % (self.identifier, 
                                                       self.revision, 
                                                       self.name)
 
@@ -103,7 +103,7 @@ class File(models.Model):
     size = models.BigIntegerField(verbose_name=u'size')
  
     def __unicode__(self):
-        return 'ID: %d | Revision: %d | Name: %s)' % (self.identifier, 
+        return 'ID: %d | Revision: %d | Name: %s' % (self.identifier, 
                                                       self.revision, 
                                                       self.name)
 
