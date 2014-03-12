@@ -1,0 +1,50 @@
+<!doctype html>
+{% load staticfiles %}
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Chiara data management{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'base/css/base.css' %}">
+    <link rel="icon" type="image/ico" href="{% static 'base/ico/favicon.ico' %}">
+</head>
+
+<body>
+	{# chiara logo #}
+    <img class="chiara-logo" src="{% static 'base/img/chiara-logo_big.jpg' %}" alt="chiara-logo"> 
+    
+    {# tabbar #}
+    <table class="tabbar">
+	<tr>
+  		{% block news_tab %}
+  		<td class="tab"><a class="tab-notselected" href={% url 'collection.views.news' %}>News</a></td>
+  		{% endblock %}
+  		{% block shared_folder_tab %}
+  		<td class="tab"><a class="tab-notselected" href={% url 'collection.views.my_shared_folder' %}>My shared folder</a></td>
+  		{% endblock %}
+  		{% block retrieve_tab %}
+  		<td class="tab"><a class="tab-notselected" href={% url 'collection.views.retrieve_new_collections' %}>Retrieve new collections</a></td>
+  		{% endblock %}
+  		{% block manage_tab %}
+  		<td class="tab"><a class="tab-notselected" href={% url 'collection.views.manage_my_collections' %}>Manage my collections</a></td>
+  		{% endblock %}
+  		{% block account_tab %}
+  		<td class="accounttab"><a class="accounttab-notselected" href={% url 'authentication.views.your_account' %}>Your account</a></td>
+  		{% endblock %}
+	</tr>
+	</table> 
+
+	{# different tab content #}
+	<div class="content-frame">
+    {% block content %}{% endblock %}
+    </div>
+    
+    {# footbar #}
+    <table class="tabbar">
+    <tr class="tab-notselected">
+  		<td class="doctab"><a class="doctab-notselected">Documentation</a></td>    	
+    </tr>
+    </table>
+    
+    
+    
+</body>
+</html>

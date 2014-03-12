@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block title %} Your account {% endblock %}
+
+{% block account_tab %}
+<td class="accounttab"><a class="accounttab-selected" href={% url 'authentication.views.your_account' %}>Your account</a></td>
+{% endblock %}
