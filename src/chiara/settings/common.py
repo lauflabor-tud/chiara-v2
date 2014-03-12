@@ -45,8 +45,7 @@ INSTALLED_APPS = (
 
 # Template path
 TEMPLATE_DIRS = (
-    os.path.join(SITE_ROOT, '..', 'templates'),
-    #'/home/dominik/.virtualenvs/chiara/lib/python2.7/site-packages/treebeard/templates',
+    os.path.join(SITE_ROOT, 'templates'),
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
