@@ -7,12 +7,5 @@
 {% endblock %}
 
 {% block content %}
-<h2>List all collections: </h2>
-
-{% for c in collections %}
-	{% if c.revision == 1 %}
-   		<li><a> {{ c.directory.name }} (ID: {{ c.identifier }})<a></li>
-   	{% endif %}
-{% endfor %}
-
+<p class="info">List all news ...</p>
 {% endblock %}

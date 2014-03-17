@@ -1,1 +1,97 @@
-body{background-color:#efefff}img.chiara-logo{display:block;margin-left:auto;margin-right:auto;width:75%}div.content-frame{display:block;margin-left:auto;margin-right:auto;margin-bottom:20px;width:70%}table.tabbar{background-color:#ffefaf;margin-top:2px;margin-left:auto;margin-right:auto;width:75%}td.tab{line-height:0;text-align:center}a.tab-notselected,a.tab-selected{font:normal bold 12px Verdana,Arial,Helvetica;text-decoration:none}a.tab-notselected{color:#2040cf}a.tab-notselected:hover{color:#40709a}a.tab-selected{color:#cf2040}a.tab-selected:hover{color:#af4060}td.accounttab{line-height:0;text-align:center}a.accounttab-notselected,a.accounttab-selected{font:normal bold 12px Verdana,Arial,Helvetica;text-decoration:none}a.accounttab-notselected{color:#5a5a5a}a.accounttab-notselected:hover{color:#8a8a8a}a.accounttab-selected{color:#cf2040}a.accounttab-selected:hover{color:#af4060}td.doctab{line-height:0;text-align:right;padding-right:20px}a.doctab-notselected{font:normal bold 12px Verdana,Arial,Helvetica;text-decoration:none}a.doctab-notselected{color:#5a5a5a}a.doctab-notselected:hover{color:#8a8a8a}
+/* VARIABLES */
+/* ========= */
+/* COMMON */
+/* ====== */
+body {
+  background-color: #efefff;
+}
+img.chiara-logo {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 75%;
+}
+/* CONTENT */
+/* ======= */
+div.content-frame {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+  width: 70%;
+}
+p.info {
+  font: normal bold 12px Verdana, Arial, Helvetica;
+}
+/* HEAD- & FOOTBAR */
+/* =============== */
+table.tabbar {
+  background-color: #ffefaf;
+  margin-top: 2px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 75%;
+}
+/* basic tabs */
+/* ---------- */
+td.tab {
+  line-height: 0px;
+  text-align: center;
+}
+a.tab-notselected,
+a.tab-selected {
+  font: normal bold 12px Verdana, Arial, Helvetica;
+  text-decoration: none;
+}
+a.tab-notselected {
+  color: #2040cf;
+}
+a.tab-notselected:hover {
+  color: #40709a;
+}
+a.tab-selected {
+  color: #cf2040;
+}
+a.tab-selected:hover {
+  color: #af4060;
+}
+/* account tab */
+/* ----------- */
+td.accounttab {
+  line-height: 0px;
+  text-align: center;
+}
+a.accounttab-notselected,
+a.accounttab-selected {
+  font: normal bold 12px Verdana, Arial, Helvetica;
+  text-decoration: none;
+}
+a.accounttab-notselected {
+  color: #5a5a5a;
+}
+a.accounttab-notselected:hover {
+  color: #8a8a8a;
+}
+a.accounttab-selected {
+  color: #cf2040;
+}
+a.accounttab-selected:hover {
+  color: #af4060;
+}
+/* documentation tab */
+/* ----------------- */
+td.doctab {
+  line-height: 0px;
+  text-align: right;
+  padding-right: 20px;
+}
+a.doctab-notselected {
+  font: normal bold 12px Verdana, Arial, Helvetica;
+  text-decoration: none;
+}
+a.doctab-notselected {
+  color: #5a5a5a;
+}
+a.doctab-notselected:hover {
+  color: #8a8a8a;
+}
