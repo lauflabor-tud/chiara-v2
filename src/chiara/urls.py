@@ -13,7 +13,7 @@ urlpatterns = patterns('',
     
     url(r'^$', 'collection.views.index'),
     
-    url(r'^your_account/', 'authentication.views.your_account'),
+    url(r'^my_account/', 'authentication.views.my_account'),
     
     url(r'^news/', 'collection.views.news'),
     url(r'^my_shared_folder/', 'collection.views.my_shared_folder'),
