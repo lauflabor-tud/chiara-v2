@@ -4,6 +4,10 @@
 # necessary to execute less.js
 node.js
 
-# less.js is tool to compile .less into .css
-# less extends the css language with variables, functions, etc.
+# less.js extends the css language with variables, functions, etc.
+# the less code will be written into *.less files and less.js compiles .less into .css
 less.js
+
+# sphinx is a tool to create the chiara documentation
+# it compile the restructeredText files into HTML files
+sphinx
