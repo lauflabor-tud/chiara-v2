@@ -1,6 +1,6 @@
 from django.http import HttpResponse, Http404
-from django.template import Context, loader
 from django.template.response import TemplateResponse
+from django.contrib.auth.decorators import permission_required
 
 from collection.models import Collection
 
@@ -14,19 +14,20 @@ def news(request):
         collections = Collection.objects.all()
     except Collection.DoesNotExist:
         raise Http404
-    t = loader.get_template('collection/news.html')
-    c = Context({'collections': collections})
-    return HttpResponse(t.render(c))
+    t = TemplateResponse(request, 'collection/news.html', 
+                         {'collections': collections})
+    return HttpResponse(t.render())
 
 
+@permission_required('collection.my_shared_folder', login_url="/login/")
 def my_shared_folder(request):
     try:
         collections = Collection.objects.all()
     except Collection.DoesNotExist:
         raise Http404
-    t = loader.get_template('collection/my_shared_folder.html')
-    c = Context({'collections': collections})
-    return HttpResponse(t.render(c))
+    t = TemplateResponse(request, 'collection/my_shared_folder.html', 
+                         {'collections': collections})
+    return HttpResponse(t.render())
 
 
 def retrieve_new_collections(request):
@@ -34,16 +35,17 @@ def retrieve_new_collections(request):
         collections = Collection.objects.all()
     except Collection.DoesNotExist:
         raise Http404
-    t = loader.get_template('collection/retrieve_new_collections.html')
-    c = Context({'collections': collections})
-    return HttpResponse(t.render(c))
+    t = TemplateResponse(request, 'collection/retrieve_new_collections.html', 
+                         {'collections': collections})
+    return HttpResponse(t.render())
 
 
+@permission_required('collection.manage_my_collections', login_url="/login/")
 def manage_my_collections(request):
     try:
         collections = Collection.objects.all()
     except Collection.DoesNotExist:
         raise Http404
-    t = loader.get_template('collection/manage_my_collections.html')
-    c = Context({'collections': collections})
-    return HttpResponse(t.render(c))
+    t = TemplateResponse(request, 'collection/manage_my_collections.html', 
+                         {'collections': collections})
+    return HttpResponse(t.render())

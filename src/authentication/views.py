@@ -1,5 +1,6 @@
 from django.http import HttpResponse, Http404
-from django.template import Context, loader
+from django.template.response import TemplateResponse
+from django.contrib.auth.views import login as contrib_login, logout as contrib_logout
 
 from collection.models import Collection
 
@@ -8,6 +9,14 @@ def my_account(request):
         collections = Collection.objects.all()
     except Collection.DoesNotExist:
         raise Http404
-    t = loader.get_template('authentication/my_account.html')
-    c = Context({'collections': collections})
-    return HttpResponse(t.render(c))
+    t = TemplateResponse(request, 'authentication/my_account.html', 
+                     {'collections': collections})
+    return HttpResponse(t.render())
+
+
+def login(request):
+    return contrib_login(request, template_name='authentication/login.html')
+
+
+def logout(request):
+    return contrib_logout(request, template_name='authentication/logout.html')

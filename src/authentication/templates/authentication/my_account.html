@@ -3,9 +3,17 @@
 {% block title %} My account {% endblock %}
 
 {% block account_tab %}
-<td class="accounttab"><a class="accounttab-selected" href={% url 'authentication.views.my_account' %}>My account</a></td>
+<td class="accounttab"><a class="accounttab-selected" href={% url 'my_account' %}>My account</a></td>
 {% endblock %}
 
+{% block login_tab %}
+<td class="accounttab"><a class="accounttab-selected" href={% url 'login' %}>Login</a></td>
+{% endblock %}
+
+
 {% block content %}
-<p class="info">Show account settings ...</p>
+<p class="description">Logged in: <span class="normal_text">{{ user }}</span></p>
+<a class="logout" href={% url 'logout' %}>
+   <input type="button" value="Logout" />
+</a>
 {% endblock %}

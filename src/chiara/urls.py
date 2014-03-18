@@ -5,21 +5,31 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    # Examples:
-    # url(r'^$', 'chiara.views.home', name='home'),
-    # url(r'^blog/', include('blog.urls')),
-
+    
+    # Administration
     url(r'^admin/', include(admin.site.urls)),
     
+    # Index
     url(r'^$', 'collection.views.index'),
     
-    url(r'^my_account/', 'authentication.views.my_account'),
+    # Authentication
+    url(r'^account/', 'authentication.views.my_account', name='my_account'),
+    url(r'^login/$', 'authentication.views.login', name='login'),
+    url(r'^logout/$', 'authentication.views.logout', name='logout'),
     
-    url(r'^news/', 'collection.views.news'),
-    url(r'^my_shared_folder/', 'collection.views.my_shared_folder'),
-    url(r'^retrieve_new_collections/', 'collection.views.retrieve_new_collections'),
-    url(r'^manage_my_collections/', 'collection.views.manage_my_collections'),
+    # News
+    url(r'^news/', 'collection.views.news', name='news'),
     
-    url(r'^documentation/(?P<path>.*)$', 'django.views.static.serve', \
+    # My shared folder
+    url(r'^shared-folder/', 'collection.views.my_shared_folder', name='my_shared_folder'),
+    
+    # Retrieve new collections
+    url(r'^retrieve/', 'collection.views.retrieve_new_collections', name='retrieve_new_collections'),
+    
+    # Manage my collections
+    url(r'^manage/', 'collection.views.manage_my_collections', name='manage_my_collections'),
+    
+    # Documentation
+    url(r'^doc/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root':os.path.join(SITE_ROOT, 'documentation/build/html')}),
 )

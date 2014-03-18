@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block account_tab %}
+<td class="accounttab"><a class="accounttab-selected" href={% url 'my_account' %}>My account</a></td>
+{% endblock %}
+
+{% block login_tab %}
+<td class="accounttab"><a class="accounttab-selected" href={% url 'login' %}>Login</a></td>
+{% endblock %}
+
+
+{% block content %}
+
+{# Logged in user #}
+{% if user.is_authenticated %}
+	<p class="error">You are already logged in.</p>
+	
+{# Public user #}
+{% else %}
+
+{% if form.errors %}
+	<p class="error">Your username and password didn't match. Please try again!</p>
+{% endif %}
+
+<form method="post">{% csrf_token %}
+<p class="info"> Please enter your username and password: </p>
+<table>
+<tr>
+    <td class="description">{{ form.username.label_tag }}</td>
+    <td>{{ form.username }}</td>
+</tr>
+<tr>
+    <td class="description">{{ form.password.label_tag }}</td>
+    <td>{{ form.password }}</td>
+</tr>
+</table>
+
+<input type="submit" value="Login" />
+<input type="hidden" name="next" value="{% url 'news' %}" />
+</form>
+
+{% endif %}
+
+{% endblock %}

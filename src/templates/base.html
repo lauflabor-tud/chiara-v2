@@ -15,32 +15,49 @@
     <table class="tabbar">
 	<tr>
   		{% block news_tab %}
-  		<td class="tab"><a class="tab-notselected" href={% url 'collection.views.news' %}>News</a></td>
+  		<td class="tab"><a class="tab-notselected" href={% url 'news' %}>News</a></td>
   		{% endblock %}
-  		{% block shared_folder_tab %}
-  		<td class="tab"><a class="tab-notselected" href={% url 'collection.views.my_shared_folder' %}>My shared folder</a></td>
-  		{% endblock %}
+  		
+  		{% if user.is_authenticated %}
+	  		{% block shared_folder_tab %}
+	  		<td class="tab"><a class="tab-notselected" href={% url 'my_shared_folder' %}>My shared folder</a></td>
+	  		{% endblock %}
+	  	{% endif %}
+	  	
   		{% block retrieve_tab %}
-  		<td class="tab"><a class="tab-notselected" href={% url 'collection.views.retrieve_new_collections' %}>Retrieve new collections</a></td>
+  		<td class="tab"><a class="tab-notselected" href={% url 'retrieve_new_collections' %}>Retrieve new collections</a></td>
   		{% endblock %}
-  		{% block manage_tab %}
-  		<td class="tab"><a class="tab-notselected" href={% url 'collection.views.manage_my_collections' %}>Manage my collections</a></td>
-  		{% endblock %}
-  		{% block account_tab %}
-  		<td class="accounttab"><a class="accounttab-notselected" href={% url 'authentication.views.my_account' %}>My account</a></td>
-  		{% endblock %}
+  		
+  		{% if user.is_authenticated %}
+	  		{% block manage_tab %}
+	  		<td class="tab"><a class="tab-notselected" href={% url 'manage_my_collections' %}>Manage my collections</a></td>
+	  		{% endblock %}
+	  	{% endif %}
+	  	
+  		{% if user.is_authenticated %}
+	  		{% block account_tab %}
+	  		<td class="accounttab"><a class="accounttab-notselected" href={% url 'my_account' %}>My account</a></td>
+	  		{% endblock %}
+	  	{% else %}
+	  		{% block login_tab %}
+	  		<td class="accounttab"><a class="accounttab-notselected" href={% url 'login' %}>Login</a></td>
+	  		{% endblock %}
+	  	{% endif %}
 	</tr>
 	</table> 
-
+	
 	{# different tab content #}
 	<div class="content-frame">
     {% block content %}{% endblock %}
     </div>
     
     {# footbar #}
-    <table class="tabbar">
-    <tr class="tab-notselected">
-  		<td class="doctab"><a class="doctab-notselected" href='../documentation/index.html' target="_blank">Documentation</a></td>    	
+    <table class="footbar">
+    <tr>
+    	{% if user.is_admin %}
+  			<td class="foottab"><a class="foottab-notselected" href='../admin' target="_blank">Administration</a></td>    	
+  		{% endif %}
+  		<td class="foottab"><a class="foottab-notselected" href='../doc/index.html' target="_blank">Documentation</a></td>    	
     </tr>
     </table>
     
