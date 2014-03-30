@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from utils.enums import Permission
+from chiara.settings.common import SITE_ROOT
+import os, shutil
 
 
 class UserManager(BaseUserManager):
@@ -92,6 +94,22 @@ class User(AbstractBaseUser):
 
     def __unicode__(self):
         return self.user_name
+    
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        super(AbstractBaseUser, self).save(force_insert=force_insert, force_update=force_update, 
+                                       using=using, update_fields=update_fields)
+        # create WebDAV directory
+        webdav_path = os.path.join(SITE_ROOT, "webdav", self.user_name)
+        if os.path.exists(webdav_path):
+            shutil.rmtree(webdav_path)
+            os.makedirs(webdav_path)
+    
+    def delete(self, using=None):
+        super(AbstractBaseUser, self).delete(using=using)       
+        # remove WebDAV directory
+        webdav_path = os.path.join(SITE_ROOT, "webdav", self.user_name)
+        if os.path.exists(webdav_path):
+            shutil.rmtree(webdav_path)
     
     class Meta:
         verbose_name = "user"

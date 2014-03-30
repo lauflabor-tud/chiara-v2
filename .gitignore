@@ -13,8 +13,10 @@ local_settings.py
 .idea
 .project
 .pydevproject
+.settings
 
 # Local data
 *migrations
 src/chiara/settings/local.py
 src/chiara/wsgi.py
+src/webdav/*
