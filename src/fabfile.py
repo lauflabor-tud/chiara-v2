@@ -1,6 +1,6 @@
 from fabric.api import lcd, local
 import os, shutil
-from chiara.settings.common import SITE_ROOT
+from chiara.settings.common import SRC_DIR
 from chiara.settings.local import ROOT_PERMISSION
 
 # Print variables
@@ -33,7 +33,7 @@ def refresh():
     """
     Refreshs the apache server with updated data of the project.
     """
-    with lcd(SITE_ROOT):
+    with lcd(SRC_DIR):
         local(__get_sudo() + 'python manage.py syncdb')
         local(__get_sudo() + 'python manage.py collectstatic')
         local('sudo service apache2 restart')
@@ -51,11 +51,11 @@ def reset_db():
         user_input = raw_input('Are you finished? Type yes: ')
     
     # Reset in Django
-    with lcd(SITE_ROOT):
+    with lcd(SRC_DIR):
         print RESET_SOUTH
         for app in main_apps:
-            if(os.path.exists(os.path.join(SITE_ROOT, app, 'migrations'))):
-                shutil.rmtree(os.path.join(SITE_ROOT, app, 'migrations'))
+            if(os.path.exists(os.path.join(SRC_DIR, app, 'migrations'))):
+                shutil.rmtree(os.path.join(SRC_DIR, app, 'migrations'))
             local(__get_sudo() + 'python manage.py schemamigration ' + app + ' --initial')  
         local(__get_sudo() + 'python manage.py syncdb')  
         for app in main_apps:

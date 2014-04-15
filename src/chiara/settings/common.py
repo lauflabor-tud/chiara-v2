@@ -8,11 +8,17 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.6/ref/settings/
 """
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-SITE_ROOT = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
-BASE_DIR = os.path.dirname(SITE_ROOT)
 
+# location of different directories
+SRC_DIR = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
+PROJECT_DIR = os.path.dirname(SRC_DIR)
+WEBDAV_DIR = os.path.join(SRC_DIR, 'webdav')
+
+# name of system directories and files
+COLLECTION_INFO_DIR ='_chiara'
+COLLECTION_SUBSCRIPTION_FILE = 'description.txt'
+COLLECTION_TRAITS_FILE = 'traits'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -45,7 +51,7 @@ INSTALLED_APPS = (
 
 # Template path
 TEMPLATE_DIRS = (
-    os.path.join(SITE_ROOT, 'templates'),
+    os.path.join(SRC_DIR, 'templates'),
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (

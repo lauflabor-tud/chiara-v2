@@ -1,5 +1,5 @@
 from django.db import models
-    
+import os, utils.path
     
 class Collection(models.Model):
     """The Collection model represent a collection of directories
@@ -32,6 +32,33 @@ class Collection(models.Model):
     
     def get_name(self):
         return self.directory.name
+    
+    def get_file(self, path):
+        """Returns the file of the given relative path."""
+        [dirs, f] = os.path.split(path)
+        sub_dir = self.get_dir(dirs)
+        if(sub_dir):
+            f = sub_dir.files.filter(name=f)
+            # check if file exists
+            if(f):
+                return f[0]
+        return None
+    
+    def get_dir(self, path):
+        """Returns the directory of the given relative path."""
+        split_path = utils.path.no_slash(path).split("/")
+        dirs = split_path[1:]
+        sub_dir = self.directory
+        # walk down to last directory
+        for d in dirs:
+            sub_dir = sub_dir.sub_directories.filter(name=d)
+            # check if directoy exists
+            if(sub_dir):
+                sub_dir = sub_dir[0]
+            else:
+                return None
+        return sub_dir
+    
     
     def __unicode__(self):
         return unicode(self.directory)

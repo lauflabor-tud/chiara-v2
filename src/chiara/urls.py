@@ -1,5 +1,5 @@
 import os
-from chiara.settings.common import SITE_ROOT
+from chiara.settings.common import SRC_DIR
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
@@ -21,7 +21,8 @@ urlpatterns = patterns('',
     url(r'^news/', 'collection.views.news', name='news'),
     
     # My shared folder
-    url(r'^shared-folder/', 'collection.views.my_shared_folder', name='my_shared_folder'),
+    url(r'^shared-folder/$', 'collection.views.my_shared_folder', name='my_shared_folder'),
+    url(r'^shared-folder/(?P<rel_path>.*)/$', 'collection.views.my_shared_folder', name='my_shared_folder'),
     
     # Retrieve new collections
     url(r'^retrieve/', 'collection.views.retrieve_new_collections', name='retrieve_new_collections'),
@@ -31,5 +32,5 @@ urlpatterns = patterns('',
     
     # Documentation
     url(r'^doc/(?P<path>.*)$', 'django.views.static.serve',
-        {'document_root':os.path.join(SITE_ROOT, 'documentation/build/html')}),
+        {'document_root':os.path.join(SRC_DIR, 'documentation/build/html')}),
 )

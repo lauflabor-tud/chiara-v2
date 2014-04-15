@@ -2,7 +2,11 @@ from django.http import HttpResponse, Http404
 from django.template.response import TemplateResponse
 from django.contrib.auth.decorators import permission_required
 
+import os, utils.path, utils.webfolder
 from collection.models import Collection
+
+import logging
+logger = logging.getLogger(__name__)
 
 def index(request):
     t = TemplateResponse(request, 'base.html', {})
@@ -20,13 +24,41 @@ def news(request):
 
 
 @permission_required('collection.my_shared_folder', login_url="/login/")
-def my_shared_folder(request):
-    try:
-        collections = Collection.objects.all()
-    except Collection.DoesNotExist:
-        raise Http404
+def my_shared_folder(request, rel_path=''):
+
+    # class the files in category collection, directory or file
+    collections = []
+    dirs = []
+    files = []
+    for item_name in utils.webfolder.list_dir(request.user, rel_path):
+        rel_item_path = os.path.join(utils.path.no_slash(rel_path), item_name)
+        if utils.webfolder.is_file(request.user, rel_item_path):
+            file_size = utils.webfolder.get_file_size(request.user, rel_item_path)
+            f = utils.webfolder.get_file(request.user, rel_item_path)
+            file_revision = f.revision if f else "-" 
+            files.append({"name": item_name, 
+                          "size": file_size, 
+                          "revision": file_revision,
+                          "part_of_collection": bool(f)})
+        elif utils.webfolder.is_dir(request.user, rel_item_path):
+            collection = utils.webfolder.get_collection(request.user, rel_item_path)
+            if collection:
+                collections.append(collection)
+            else:
+                dir_size = utils.webfolder.get_dir_size(request.user, rel_item_path)
+                d = utils.webfolder.get_dir(request.user, rel_item_path)
+                dir_revision = d.revision if d else "-"
+                dirs.append({"name": item_name, 
+                             "size": dir_size, 
+                             "revision": dir_revision, 
+                             "part_of_collection": bool(d)})
+    
+    # call html
     t = TemplateResponse(request, 'collection/my_shared_folder.html', 
-                         {'collections': collections})
+                         {'rel_path': utils.path.both_slash(rel_path),
+                          'collections': collections, 
+                          'dirs': dirs, 
+                          'files': files})
     return HttpResponse(t.render())
 
 
@@ -49,3 +81,5 @@ def manage_my_collections(request):
     t = TemplateResponse(request, 'collection/manage_my_collections.html', 
                          {'collections': collections})
     return HttpResponse(t.render())
+
+
