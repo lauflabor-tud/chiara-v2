@@ -45,7 +45,7 @@
   </tr>
   {% for d in dirs %}
   	<tr>
-		<td class="listdir-name"><a class="listdir-name" href={{ d.name }}> {{ d.name }} </a></td>
+		<td class="listdir-name"><a class="listdir-name" href={{ d.name|urlencode:"" }}> {{ d.name }} </a></td>
 		<td class="listdir-info"> - / {{ d.revision }} / {{ d.size }} </td>
 		<td>
 			{% if not d.part_of_collection %}
