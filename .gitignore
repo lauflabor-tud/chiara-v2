@@ -17,6 +17,7 @@ local_settings.py
 
 # Local data
 *migrations
+*.sqlite3
 src/chiara/settings/local.py
 src/chiara/wsgi.py
 src/webdav/*
