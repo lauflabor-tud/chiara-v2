@@ -100,9 +100,8 @@ class User(AbstractBaseUser):
                                        using=using, update_fields=update_fields)
         # create WebDAV directory
         webdav_path = os.path.join(WEBDAV_DIR, self.user_name)
-        if os.path.exists(webdav_path):
-            shutil.rmtree(webdav_path)
-        os.makedirs(webdav_path)
+        if not os.path.exists(webdav_path):
+            os.makedirs(webdav_path)
     
     def delete(self, using=None):
         super(AbstractBaseUser, self).delete(using=using)       

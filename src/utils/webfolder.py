@@ -1,4 +1,4 @@
-import os, ConfigParser
+import os, math, ConfigParser
 from chiara.settings.common import WEBDAV_DIR, COLLECTION_INFO_DIR, COLLECTION_SUBSCRIPTION_FILE, COLLECTION_TRAITS_FILE
 import utils.path
 
@@ -91,4 +91,16 @@ def get_dir_size(user, rel_path):
             total_size += get_dir_size(user, rel_item_path)
     return total_size
 
+
+def convert_size(size):
+    if size >= math.pow(10,12):
+        return str(round(size / math.pow(10,12), 2)) + " TB";
+    elif size >= math.pow(10,9):
+        return str(round(size / math.pow(10,9), 2)) + " GB";
+    elif size >= math.pow(10,6):
+        return str(round(size / math.pow(10,6), 2)) + " MB";
+    elif size >= math.pow(10,3):
+        return str(round(size / math.pow(10,3), 2)) + " KB";
+    else:
+        return str(size) + " B";
 

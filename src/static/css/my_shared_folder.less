@@ -1,16 +1,11 @@
 @base_font_family: Verdana, Arial, Helvetica;
 
 th.listdir {
+	font: normal bold 12px @base_font_family;
+	text-decoration: underline;
 	margin-left: 10px;
 	width: 33%;
 	text-align: left;
-}
-
-td.listdir-header {
-	font: normal bold 12px @base_font_family;
-	text-decoration: underline;
-	color: rgb(0,0,0);
-	width: 33%;
 }
 
 td.listdir-name {
@@ -35,5 +30,15 @@ a.listdir-name {
 }
 
 a.listdir-name:hover {
-	color: rgb(175,64,96);
+	color: rgb(138,138,250);
+}
+
+a.listfile-name{
+	font: normal 12px @base_font_family;
+    text-decoration:none;
+    color:rgb(90,90,90);
+}
+
+a.listfile-name:hover{
+	color: rgb(138,138,138);
 }

@@ -9,42 +9,46 @@
 {% block content %}
 
 <table class="content">
+  {# Current Directory #}
   <tr>
   	<td class="description" colspan="3"> Current directory: <span class="normal_text"> {{ rel_path }} </span></p>
   </tr>
-{% comment %}
+  
+  {# Header #}
   <tr>
   	<th class="listdir"> Name </th>
   	<th class="listdir"> ID / Revision / Size </th>
   	<th class="listdir"> Action </th>
   </tr>
-{% endcomment %}
-  {# List Collections #}
-  <tr>
-    <td class="listdir-header">Collections</td>
-    <td class="listdir-header">ID / Revision / Size</td>
-    <td> </td>
-  </tr>
-  <tr>
-	{% for c in collections %}
-		<td class="listdir-name"><a class="listdir-name" href={{ c.directory.name }}> {{ c.directory.name }} </a></td>
-		<td class="listdir-info"> {{ c.identifier }} / {{ c.revision }} / {{ c.directory.size }} </td>
-		<td> 
-			<select class="listdir-action">
-			  <option value="push">push local revision</option>
-			  <option value="pull">update to revision</option>
-			  <option value="unsubscribe">unsubscribe</option>
-			</select>
-			<input class="button" type="button" value="OK" />
-		</td>
-	{% endfor %}
-  </tr>
-  {# List Directories #}
-  <tr>
-    <td class="listdir-header" colspan="3">Directories</td>
-  </tr>
-  {% for d in dirs %}
+  
+  
+  {# .. to navigate to parent directory #}
+  {% if not rel_path == "/" %}
   	<tr>
+  	  <td class="listdir-name"><a class="listdir-name" href={% url 'my_shared_folder' %}{{ rel_parent_path }}> .. </a></td>
+  	</tr>
+  {% endif %}
+  
+  {% for d in dirs %}
+  	{# List Collections #}
+  	{% if d.type == "c" %}
+  	  <tr>
+		<td class="listdir-name"><a class="listdir-name" href={{ d.name }}> {{ d.name }} </a></td>
+		<td class="listdir-info"> {{ d.id }} / {{ d.revision }} / {{ d.size }} </td>
+		<td> 
+		  <select class="listdir-action">
+			<option value="push">push local revision</option>
+			<option value="pull">update to revision</option>
+			<option value="unsubscribe">unsubscribe</option>
+		  </select>
+	 	  <input class="button" type="button" value="OK" />
+		</td>
+	  </tr>
+  	{% endif %}
+  	
+  	{# List Directories #}
+  	{% if d.type == "d" %}
+  	  <tr>
 		<td class="listdir-name"><a class="listdir-name" href={{ d.name|urlencode:"" }}> {{ d.name }} </a></td>
 		<td class="listdir-info"> - / {{ d.revision }} / {{ d.size }} </td>
 		<td>
@@ -55,15 +59,14 @@
 				<input class="button" type="button" value="OK" />
 			{% endif %}
 		</td>
-  	</tr>
+  	  </tr>
+  	{% endif %}
   {% endfor %}
+  
   {# List Files #}
-  <tr>
-    <td class="listdir-header" colspan="3">Files</td>
-  </tr>
   {% for f in files %}
     <tr>
-		<td class="listdir-name"><a class="listdir-name"> {{ f.name }} </a></td>
+		<td class="listdir-name"><a class="listfile-name"> {{ f.name }} </a></td>
 		<td class="listdir-info"> - / {{ f.revision }} / {{ f.size }} </td>
 		<td> </td>
   	</tr>

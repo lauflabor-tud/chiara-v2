@@ -1,1 +1,35 @@
-th.listdir{margin-left:10px;width:33%;text-align:left}td.listdir-header{font:normal bold 12px Verdana,Arial,Helvetica;text-decoration:underline;color:#000;width:33%}td.listdir-name{margin-left:10px;width:33%}td.listdir-info{width:33%;font:normal 12px Verdana,Arial,Helvetica;color:#807040}select.listdir-action{font:normal 12px Verdana,Arial,Helvetica}a.listdir-name{font:normal bold 12px Verdana,Arial,Helvetica;text-decoration:none;color:#5a5aea}a.listdir-name:hover{color:#af4060}
+th.listdir {
+  font: normal bold 12px Verdana, Arial, Helvetica;
+  text-decoration: underline;
+  margin-left: 10px;
+  width: 33%;
+  text-align: left;
+}
+td.listdir-name {
+  margin-left: 10px;
+  width: 33%;
+}
+td.listdir-info {
+  width: 33%;
+  font: normal 12px Verdana, Arial, Helvetica;
+  color: #807040;
+}
+select.listdir-action {
+  font: normal 12px Verdana, Arial, Helvetica;
+}
+a.listdir-name {
+  font: normal bold 12px Verdana, Arial, Helvetica;
+  text-decoration: none;
+  color: #5a5aea;
+}
+a.listdir-name:hover {
+  color: #8a8afa;
+}
+a.listfile-name {
+  font: normal 12px Verdana, Arial, Helvetica;
+  text-decoration: none;
+  color: #5a5a5a;
+}
+a.listfile-name:hover {
+  color: #8a8a8a;
+}

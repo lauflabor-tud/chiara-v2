@@ -1,5 +1,6 @@
 from django.db import models
 import os, utils.path
+from utils import webfolder
     
 class Collection(models.Model):
     """The Collection model represent a collection of directories
@@ -64,6 +65,7 @@ class Collection(models.Model):
         return unicode(self.directory)
         
     class Meta:
+        unique_together = (("identifier", "revision"),)
         verbose_name = "collection"
         verbose_name_plural = "collections"
 
@@ -103,7 +105,7 @@ class Directory(models.Model):
         return 'ID: %d | Revision: %d | Name: %s' % (self.identifier, 
                                                       self.revision, 
                                                       self.name)
-
+    
     class Meta:
         unique_together = (("identifier", "revision"),)
         verbose_name = "directory"
