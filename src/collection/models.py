@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, IntegrityError
 import os, utils.path
 from utils import webfolder
     
@@ -63,6 +63,26 @@ class Collection(models.Model):
     
     def __unicode__(self):
         return unicode(self.directory)
+    
+    def save(self): 
+        """Get last value of Code and Number from database and increment before save"""
+        created = False
+        while not created:
+            try:
+                # raise exception if no directory or no authors
+                if self.directory_id==None:
+                    raise IntegrityError("collection_collection.directory may not be NULL")
+                elif not self.authors.all():
+                    raise IntegrityError("collection_collection.authors may not be empty")                
+                # get id for the collection and save it
+                self.identifier = self.directory.identifier
+                super(Collection, self).save()
+                created = True
+            except IntegrityError as exc:
+                if self.directory_id==None or not self.authors.all():
+                    raise exc
+                else:
+                    pass
         
     class Meta:
         unique_together = (("identifier", "revision"),)
@@ -105,7 +125,27 @@ class Directory(models.Model):
         return 'ID: %d | Revision: %d | Name: %s' % (self.identifier, 
                                                       self.revision, 
                                                       self.name)
-    
+
+    def save(self): 
+        """Get last value of Code and Number from database and increment before save"""
+        created = False
+        while not created:
+            try:
+                # raise exception if name is empty
+                if self.name=="":
+                    raise IntegrityError("collection_directory.name may not be empty")  
+                # get next id for the directory and save it
+                max_id = Directory.objects.all().aggregate(models.Max('identifier'))['identifier__max']
+                max_id = 0 if not max_id else max_id
+                self.identifier = max_id + 1
+                super(Directory, self).save()
+                created = True
+            except IntegrityError as exc:
+                if self.user_modified_id==None or self.name=="" or self.size==None:
+                    raise exc                   
+                else:
+                    pass
+     
     class Meta:
         unique_together = (("identifier", "revision"),)
         verbose_name = "directory"
@@ -135,7 +175,27 @@ class File(models.Model):
         return 'ID: %d | Revision: %d | Name: %s' % (self.identifier, 
                                                       self.revision, 
                                                       self.name)
-
+    
+    def save(self): 
+        """Get last value of Code and Number from database and increment before save"""
+        created = False
+        while not created:
+            try:
+                # raise exception if name is empty
+                if self.name=="":
+                    raise IntegrityError("collection_file.name may not be empty")  
+                # get next id for the file and save it
+                max_id = File.objects.all().aggregate(models.Max('identifier'))['identifier__max']
+                max_id = 0 if not max_id else max_id
+                self.identifier = max_id + 1
+                super(File, self).save()
+                created = True
+            except IntegrityError as exc:
+                if self.user_modified_id==None or self.name=="" or self.size==None:
+                    raise exc                   
+                else:
+                    pass
+      
     class Meta:
         unique_together = (("identifier", "revision"),)
         verbose_name = "file"
