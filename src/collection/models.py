@@ -1,6 +1,9 @@
 from django.db import models, IntegrityError
 import os, utils.path
 from utils import webfolder
+
+import logging
+logger = logging.getLogger(__name__)
     
 class Collection(models.Model):
     """The Collection model represent a collection of directories
@@ -8,22 +11,22 @@ class Collection(models.Model):
     and further information."""
 
     identifier = models.IntegerField(verbose_name=u'ID')
-    revision = models.IntegerField(verbose_name=u'revision', default=1)
+    revision = models.IntegerField(verbose_name=u'revision')
 
     directory = models.OneToOneField('collection.Directory', 
-                                     related_name='collection',
-                                     primary_key=True)
+                                     related_name='collection')
     
     summary = models.TextField(verbose_name=u'summary', blank=True)
     description = models.TextField(verbose_name=u'description', blank=True)
     authors = models.ManyToManyField('authentication.User', 
                                      verbose_name=u'authors', 
-                                     related_name='author_of')
+                                     related_name='author_of', 
+                                     blank=True)
     
     tags = models.ManyToManyField('collection.Tag', 
-                                  blank=True, 
                                   verbose_name=u'tags',
-                                  related_name='collections')
+                                  related_name='collections',
+                                  blank=True) 
     
     def get_identifier(self):
         return self.directory.identifier
@@ -63,26 +66,24 @@ class Collection(models.Model):
     
     def __unicode__(self):
         return unicode(self.directory)
-    
-    def save(self): 
-        """Get last value of Code and Number from database and increment before save"""
-        created = False
-        while not created:
-            try:
-                # raise exception if no directory or no authors
-                if self.directory_id==None:
-                    raise IntegrityError("collection_collection.directory may not be NULL")
-                elif not self.authors.all():
-                    raise IntegrityError("collection_collection.authors may not be empty")                
-                # get id for the collection and save it
-                self.identifier = self.directory.identifier
-                super(Collection, self).save()
-                created = True
-            except IntegrityError as exc:
-                if self.directory_id==None or not self.authors.all():
-                    raise exc
-                else:
-                    pass
+
+    def save(self, *args, **kwargs):
+        """Find max value before initial a directory and check required fields."""
+        # initial collection
+        if not self.id:
+            # raise exception if no directory
+            if self.directory_id==None:
+                raise IntegrityError("collection_collection.directory may not be NULL")
+            # get id for the collection and save it
+            self.identifier = self.directory.identifier
+            super(Collection, self).save()
+        # update directory
+        else:
+            # raise exception if no directory
+            if self.directory_id==None:
+                raise IntegrityError("collection_collection.directory may not be NULL") 
+            else:
+                super(Collection, self).save(*args, **kwargs)
         
     class Meta:
         unique_together = (("identifier", "revision"),)
@@ -96,17 +97,17 @@ class Directory(models.Model):
     The root directory is the primary key of a collection."""
 
     identifier = models.IntegerField(verbose_name=u'ID')
-    revision = models.IntegerField(verbose_name=u'revision', default=1)
+    revision = models.IntegerField(verbose_name=u'revision')
     name = models.CharField(verbose_name=u'name', max_length=120)
     
     sub_directories = models.ManyToManyField('collection.Directory', 
-                                             blank=True,
                                              verbose_name=u'sub directories',
-                                             related_name='parent_directories')
+                                             related_name='parent_directories',
+                                             blank=True)
     files = models.ManyToManyField('collection.File', 
-                                   blank=True,
                                    verbose_name=u'files',
-                                   related_name='parent_directories')
+                                   related_name='parent_directories',
+                                   blank=True)
 
     user_modified = models.ForeignKey('authentication.User', 
                                       verbose_name=u'user who modified',
@@ -126,25 +127,35 @@ class Directory(models.Model):
                                                       self.revision, 
                                                       self.name)
 
-    def save(self): 
-        """Get last value of Code and Number from database and increment before save"""
-        created = False
-        while not created:
-            try:
-                # raise exception if name is empty
-                if self.name=="":
-                    raise IntegrityError("collection_directory.name may not be empty")  
-                # get next id for the directory and save it
-                max_id = Directory.objects.all().aggregate(models.Max('identifier'))['identifier__max']
-                max_id = 0 if not max_id else max_id
-                self.identifier = max_id + 1
-                super(Directory, self).save()
-                created = True
-            except IntegrityError as exc:
-                if self.user_modified_id==None or self.name=="" or self.size==None:
-                    raise exc                   
-                else:
-                    pass
+    def save(self, *args, **kwargs):
+        """Find max value before initial a directory and check required fields."""
+        # initial directory
+        if not self.id:
+            created = False
+            while not created:
+                try:
+                    # raise exception if name is empty
+                    if self.name=="":
+                        raise IntegrityError("collection_directory.name may not be empty")  
+                    # get next id for the directory and save it
+                    max_id = Directory.objects.all().aggregate(models.Max('identifier'))['identifier__max']
+                    max_id = 0 if not max_id else max_id
+                    self.identifier = max_id + 1
+                    super(Directory, self).save(*args, **kwargs)
+                    created = True
+                except IntegrityError as exc:
+                    if self.user_modified_id==None or self.name=="" or self.size==None:
+                        raise exc                   
+                    else:
+                        pass
+        # update directory
+        else:
+            # raise exception if name is empty
+            if self.name=="":
+                raise IntegrityError("collection_directory.name may not be empty")  
+            else:
+                super(Directory, self).save(*args, **kwargs)
+                
      
     class Meta:
         unique_together = (("identifier", "revision"),)
@@ -176,25 +187,34 @@ class File(models.Model):
                                                       self.revision, 
                                                       self.name)
     
-    def save(self): 
-        """Get last value of Code and Number from database and increment before save"""
-        created = False
-        while not created:
-            try:
-                # raise exception if name is empty
-                if self.name=="":
-                    raise IntegrityError("collection_file.name may not be empty")  
-                # get next id for the file and save it
-                max_id = File.objects.all().aggregate(models.Max('identifier'))['identifier__max']
-                max_id = 0 if not max_id else max_id
-                self.identifier = max_id + 1
-                super(File, self).save()
-                created = True
-            except IntegrityError as exc:
-                if self.user_modified_id==None or self.name=="" or self.size==None:
-                    raise exc                   
-                else:
-                    pass
+    def save(self, *args, **kwargs):
+        """Find max value before initial a directory and check required fields."""    
+        # initial file
+        if not self.id:
+            created = False
+            while not created:
+                try:
+                    # raise exception if name is empty
+                    if self.name=="":
+                        raise IntegrityError("collection_file.name may not be empty")  
+                    # get next id for the directory and save it
+                    max_id = File.objects.all().aggregate(models.Max('identifier'))['identifier__max']
+                    max_id = 0 if not max_id else max_id
+                    self.identifier = max_id + 1
+                    super(File, self).save(*args, **kwargs)
+                    created = True
+                except IntegrityError as exc:
+                    if self.user_modified_id==None or self.name=="" or self.size==None:
+                        raise exc                   
+                    else:
+                        pass        
+        # update directory
+        else:
+            # raise exception if name is empty
+            if self.name=="":
+                raise IntegrityError("collection_directory.name may not be empty")  
+            else:
+                super(File, self).save(*args, **kwargs)
       
     class Meta:
         unique_together = (("identifier", "revision"),)
