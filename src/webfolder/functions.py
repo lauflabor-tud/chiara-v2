@@ -1,4 +1,4 @@
-import os, ConfigParser
+import os, shutil, ConfigParser
 from chiara.settings.common import WEBDAV_DIR, COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE, COLLECTION_TRAITS_FILE
 import utils.path
 
@@ -90,4 +90,9 @@ def get_dir_size(user, rel_path):
         elif is_dir(user, rel_item_path):
             total_size += get_dir_size(user, rel_item_path)
     return total_size
+
+
+def delete_dir_recursive(user, rel_path):
+    abs_path = get_abs_path(user, rel_path)
+    shutil.rmtree(abs_path)
 

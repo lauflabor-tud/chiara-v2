@@ -53,7 +53,12 @@ def add_to_collections(user, rel_path):
     except MissingDescriptionFileException:
         pass
         
-        
+
+def delete_from_webfolder(user, rel_path):
+    """Deletes the directory from webfolder"""
+    wf_func.delete_dir_recursive(user, rel_path)
+
+
 def unsubscribe(user, collection):
     """Unsubscribe the collection of the user."""
     try:
