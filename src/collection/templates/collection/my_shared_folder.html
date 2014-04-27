@@ -1,4 +1,14 @@
-{% extends "base.html" %}	
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block head_block %}
+	<link rel="stylesheet" type="text/css" href="{% static 'base/css/my_shared_folder.css' %}">
+	<script>
+       	function show_msg(msg) {
+       		alert(msg);
+       	}
+    </script>
+{% endblock %}
 
 {% block title %} My shared folder {% endblock %}
 
@@ -33,7 +43,7 @@
   	{# List Collections #}
   	{% if d.type == "c" %}
   	  <tr>
-		<td class="listdir-name"><a class="listdir-name" href={{ d.name }}> {{ d.name }} </a></td>
+		<td class="listdir-name"><a class="listdir-name" href={{ d.name|urlencode:"" }}> {{ d.name }} </a></td>
 		<td class="listdir-info"> {{ d.id }} / {{ d.revision }} / {{ d.size }} </td>
 		<td> 
 		  <select class="listdir-action">

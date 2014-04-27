@@ -1,11 +1,11 @@
-import os, math, ConfigParser
-from chiara.settings.common import WEBDAV_DIR, COLLECTION_INFO_DIR, COLLECTION_SUBSCRIPTION_FILE, COLLECTION_TRAITS_FILE
+import os, ConfigParser
+from chiara.settings.common import WEBDAV_DIR, COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE, COLLECTION_TRAITS_FILE
 import utils.path
 
-config = ConfigParser.RawConfigParser()
+traits_parser = ConfigParser.RawConfigParser()
 
 import logging
-logger = logging.getLogger("utils")
+logger = logging.getLogger("webfolder")
 
 def get_abs_path(user, rel_path):
     return os.path.join(WEBDAV_DIR, user.user_name, utils.path.no_slash(rel_path))
@@ -25,10 +25,10 @@ def is_dir(user, rel_path):
 
 def is_collection(user, rel_path):
     abs_path = get_abs_path(user, rel_path)
-    if(os.path.exists(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_SUBSCRIPTION_FILE)) and
+    if(os.path.exists(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE)) and
        os.path.exists(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))):
-        config.read(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))
-        return bool(user.subscriptions.filter(identifier=config.get('Common', 'id')))
+        traits_parser.read(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))
+        return bool(user.subscriptions.filter(identifier=traits_parser.get('Common', 'id')))
     else:
         return False
     
@@ -39,16 +39,16 @@ def get_collection_of_item(user, rel_path):
     if (rel_path=="" or not os.path.exists(abs_path)):
         return None
     elif is_collection(user, rel_path):
-        config.read(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))
-        return user.subscriptions.get(identifier=config.get('Common', 'id'))
+        traits_parser.read(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))
+        return user.subscriptions.get(identifier=traits_parser.get('Common', 'id'))
     else:
         return get_collection_of_item(user, os.path.split(rel_path)[0])
 
 
 def get_collection(user, rel_path):
     if is_collection(user, rel_path):
-        config.read(os.path.join(get_abs_path(user, rel_path), COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))
-        return user.subscriptions.get(identifier=config.get('Common', 'id'))
+        traits_parser.read(os.path.join(get_abs_path(user, rel_path), COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))
+        return user.subscriptions.get(identifier=traits_parser.get('Common', 'id'))
     else:
         return None 
     
@@ -90,17 +90,4 @@ def get_dir_size(user, rel_path):
         elif is_dir(user, rel_item_path):
             total_size += get_dir_size(user, rel_item_path)
     return total_size
-
-
-def convert_size(size):
-    if size >= math.pow(10,12):
-        return str(round(size / math.pow(10,12), 2)) + " TB";
-    elif size >= math.pow(10,9):
-        return str(round(size / math.pow(10,9), 2)) + " GB";
-    elif size >= math.pow(10,6):
-        return str(round(size / math.pow(10,6), 2)) + " MB";
-    elif size >= math.pow(10,3):
-        return str(round(size / math.pow(10,3), 2)) + " KB";
-    else:
-        return str(size) + " B";
 

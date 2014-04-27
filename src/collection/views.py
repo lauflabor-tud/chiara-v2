@@ -2,8 +2,9 @@ from django.http import HttpResponse, Http404
 from django.template.response import TemplateResponse
 from django.contrib.auth.decorators import permission_required
 
-import os, utils.path, utils.webfolder
+import os, utils.path, utils.units
 from collection.models import Collection
+import webfolder.functions as wf_func
 
 import logging
 logger = logging.getLogger(__name__)
@@ -26,34 +27,34 @@ def news(request):
 @permission_required('collection.my_shared_folder', login_url="/login/")
 def my_shared_folder(request, rel_path=''):
 
-    # class the files in category collection, directory or file
+    # class the files in categories collection, directory or file
     dirs = []
     files = []
-    for item_name in utils.webfolder.list_dir(request.user, rel_path):
+    for item_name in wf_func.list_dir(request.user, rel_path):
         rel_item_path = os.path.join(utils.path.no_slash(rel_path), item_name)
-        if utils.webfolder.is_file(request.user, rel_item_path):
-            file_size = utils.webfolder.get_file_size(request.user, rel_item_path)
-            f = utils.webfolder.get_file(request.user, rel_item_path)
+        if wf_func.is_file(request.user, rel_item_path):
+            file_size = wf_func.get_file_size(request.user, rel_item_path)
+            f = wf_func.get_file(request.user, rel_item_path)
             file_revision = f.revision if f else "-" 
             files.append({"name": item_name, 
-                          "size": utils.webfolder.convert_size(file_size), 
+                          "size": utils.units.convert_data_size(file_size), 
                           "revision": file_revision,
                           "part_of_collection": bool(f)})
-        elif utils.webfolder.is_dir(request.user, rel_item_path):
-            collection = utils.webfolder.get_collection(request.user, rel_item_path)
-            dir_size = utils.webfolder.get_dir_size(request.user, rel_item_path)
+        elif wf_func.is_dir(request.user, rel_item_path):
+            collection = wf_func.get_collection(request.user, rel_item_path)
+            dir_size = wf_func.get_dir_size(request.user, rel_item_path)
             if collection:
                 dirs.append({"type": "c",
                              "id": collection.identifier,
                              "name": collection.directory.name, 
-                             "size": utils.webfolder.convert_size(dir_size), 
+                             "size": utils.units.convert_data_size(dir_size), 
                              "revision": collection.revision})
             else:
-                d = utils.webfolder.get_dir(request.user, rel_item_path)
+                d = wf_func.get_dir(request.user, rel_item_path)
                 dir_revision = d.revision if d else "-"
                 dirs.append({"type": "d",
                              "name": item_name, 
-                             "size": utils.webfolder.convert_size(dir_size), 
+                             "size": utils.units.convert_data_size(dir_size), 
                              "revision": dir_revision, 
                              "part_of_collection": bool(d)})
     

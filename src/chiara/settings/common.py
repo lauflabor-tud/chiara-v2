@@ -17,7 +17,7 @@ WEBDAV_DIR = os.path.join(SRC_DIR, 'webdav')
 
 # name of system directories and files
 COLLECTION_INFO_DIR ='_chiara'
-COLLECTION_SUBSCRIPTION_FILE = 'description.txt'
+COLLECTION_DESCRIPTION_FILE = 'description.txt'
 COLLECTION_TRAITS_FILE = 'traits'
 
 # Quick-start development settings - unsuitable for production

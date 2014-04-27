@@ -1,0 +1,3 @@
+
+class MissingDescriptionFileException():
+    pass

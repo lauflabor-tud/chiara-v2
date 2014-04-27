@@ -1,6 +1,6 @@
 from django.db import models, IntegrityError
 import os, utils.path
-from utils import webfolder
+import webfolder.functions as wf_func
 
 import logging
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ class Collection(models.Model):
                                      related_name='collection')
     
     summary = models.TextField(verbose_name=u'summary', blank=True)
-    description = models.TextField(verbose_name=u'description', blank=True)
+    details = models.TextField(verbose_name=u'details', blank=True)
     authors = models.ManyToManyField('authentication.User', 
                                      verbose_name=u'authors', 
                                      related_name='author_of', 
@@ -27,12 +27,6 @@ class Collection(models.Model):
                                   verbose_name=u'tags',
                                   related_name='collections',
                                   blank=True) 
-    
-    def get_identifier(self):
-        return self.directory.identifier
-    
-    def get_revision(self):
-        return self.directory.revision
     
     def get_name(self):
         return self.directory.name
@@ -68,7 +62,7 @@ class Collection(models.Model):
         return unicode(self.directory)
 
     def save(self, *args, **kwargs):
-        """Find max value before initial a directory and check required fields."""
+        """Find id before initial a directory and check required fields."""
         # initial collection
         if not self.id:
             # raise exception if no directory
@@ -126,9 +120,28 @@ class Directory(models.Model):
         return 'ID: %d | Revision: %d | Name: %s' % (self.identifier, 
                                                       self.revision, 
                                                       self.name)
+        
+    def save_recursive(self, user, rel_path):
+        for item in wf_func.list_dir(user, rel_path):
+            rel_item_path = os.path.join(rel_path, item)
+            if wf_func.is_file(user, rel_item_path):                
+                f = File(revision=1, 
+                         name=item, 
+                         user_modified=user, 
+                         size=wf_func.get_file_size(user, rel_item_path))
+                f.save()
+                self.files.add(f)
+            elif wf_func.is_dir(user, rel_item_path):
+                d = Directory(revision=1,
+                              name=item,
+                              user_modified=user,
+                              size=wf_func.get_dir_size(user, rel_item_path))
+                d.save()
+                self.sub_directories.add(d)
+                d.save_recursive(user, rel_item_path)
 
     def save(self, *args, **kwargs):
-        """Find max value before initial a directory and check required fields."""
+        """Find max id before initial a directory and check required fields."""
         # initial directory
         if not self.id:
             created = False
@@ -188,7 +201,7 @@ class File(models.Model):
                                                       self.name)
     
     def save(self, *args, **kwargs):
-        """Find max value before initial a directory and check required fields."""    
+        """Find max id before initial a directory and check required fields."""    
         # initial file
         if not self.id:
             created = False
