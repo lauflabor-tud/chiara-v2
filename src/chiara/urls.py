@@ -13,7 +13,7 @@ urlpatterns = patterns('',
     url(r'^$', 'collection.views.index'),
     
     # Authentication
-    url(r'^account/', 'authentication.views.my_account', name='my_account'),
+    url(r'^preferences/', 'authentication.views.preferences', name='preferences'),
     url(r'^login/$', 'authentication.views.login', name='login'),
     url(r'^logout/$', 'authentication.views.logout', name='logout'),
     

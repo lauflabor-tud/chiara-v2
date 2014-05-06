@@ -4,12 +4,12 @@ from django.contrib.auth.views import login as contrib_login, logout as contrib_
 
 from collection.models import Collection
 
-def my_account(request):
+def preferences(request):
     try:
         collections = Collection.objects.all()
     except Collection.DoesNotExist:
         raise Http404
-    t = TemplateResponse(request, 'authentication/my_account.html', 
+    t = TemplateResponse(request, 'authentication/preferences.html', 
                      {'collections': collections})
     return HttpResponse(t.render())
 

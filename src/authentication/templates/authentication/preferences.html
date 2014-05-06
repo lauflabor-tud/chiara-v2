@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %} My preferences {% endblock %}
+
+{% block account_tab %}
+class="accounttab-selected"
+{% endblock %}
+
+{% block login_tab %}
+<td class="accounttab"><a class="accounttab-selected" href={% url 'login' %}>Login</a></td>
+{% endblock %}
+
+
+{% block content %}
+<p class="description">Logged on: <span class="normal_text">{{ user }}</span></p>
+{% endblock %}
