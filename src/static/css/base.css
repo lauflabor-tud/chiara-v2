@@ -77,29 +77,6 @@ a.tab-selected {
 a.tab-selected:hover {
   color: #af4060;
 }
-/* FOOTBAR */
-/* ======= */
-table.footbar {
-  background-color: #ffefaf;
-  margin-top: 2px;
-  margin-left: auto;
-  margin-right: auto;
-  width: 75%;
-}
-td.foottab {
-  line-height: 0px;
-  text-align: center;
-}
-a.foottab-notselected {
-  font: normal bold 12px Verdana, Arial, Helvetica;
-  text-decoration: none;
-}
-a.foottab-notselected {
-  color: #5a5a5a;
-}
-a.foottab-notselected:hover {
-  color: #8a8a8a;
-}
 /* account tab */
 /* ----------- */
 td.accounttab {
@@ -150,4 +127,27 @@ a.accounttab-dropdown:hover {
 }
 a.accounttab-dropdown-user {
   font: normal 11px Verdana, Arial, Helvetica;
+}
+/* FOOTBAR */
+/* ======= */
+table.footbar {
+  background-color: #ffefaf;
+  margin-top: 2px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 75%;
+}
+td.foottab {
+  line-height: 0px;
+  text-align: center;
+}
+a.foottab-notselected {
+  font: normal bold 12px Verdana, Arial, Helvetica;
+  text-decoration: none;
+}
+a.foottab-notselected {
+  color: #5a5a5a;
+}
+a.foottab-notselected:hover {
+  color: #8a8a8a;
 }

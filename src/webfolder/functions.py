@@ -92,7 +92,7 @@ def get_dir_size(user, rel_path):
     return total_size
 
 
-def delete_dir_recursive(user, rel_path):
+def remove_dir_recursive(user, rel_path):
     abs_path = get_abs_path(user, rel_path)
     shutil.rmtree(abs_path)
 

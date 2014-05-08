@@ -29,6 +29,7 @@ class Collection(models.Model):
                                   blank=True) 
     
     def get_name(self):
+        """Returns the name of this collection."""
         return self.directory.name
     
     def get_file(self, path):
@@ -56,10 +57,6 @@ class Collection(models.Model):
             else:
                 return None
         return sub_dir
-    
-    
-    def __unicode__(self):
-        return unicode(self.directory)
 
     def save(self, *args, **kwargs):
         """Find id before initial a directory and check required fields."""
@@ -78,7 +75,10 @@ class Collection(models.Model):
                 raise IntegrityError("collection_collection.directory may not be NULL") 
             else:
                 super(Collection, self).save(*args, **kwargs)
-        
+    
+    def __unicode__(self):
+        return unicode(self.directory)
+    
     class Meta:
         unique_together = (("identifier", "revision"),)
         verbose_name = "collection"
@@ -114,14 +114,12 @@ class Directory(models.Model):
     size = models.BigIntegerField(verbose_name=u'size')
  
     def is_root(self):
+        """Check if this directory is the root directory."""
         return len(self.parent_directory.all())==0
         
-    def __unicode__(self):
-        return 'ID: %d | Revision: %d | Name: %s' % (self.identifier, 
-                                                      self.revision, 
-                                                      self.name)
-        
     def save_recursive(self, user, rel_path):
+        """Save all subdirectories and files of this directory and 
+        create connections to this directory."""
         for item in wf_func.list_dir(user, rel_path):
             rel_item_path = os.path.join(rel_path, item)
             if wf_func.is_file(user, rel_item_path):                
@@ -168,7 +166,11 @@ class Directory(models.Model):
                 raise IntegrityError("collection_directory.name may not be empty")  
             else:
                 super(Directory, self).save(*args, **kwargs)
-                
+
+    def __unicode__(self):
+        return 'ID: %d | Revision: %d | Name: %s' % (self.identifier, 
+                                                      self.revision, 
+                                                      self.name)              
      
     class Meta:
         unique_together = (("identifier", "revision"),)
@@ -194,11 +196,6 @@ class File(models.Model):
     date_modified = models.DateField(verbose_name=u'last modified', auto_now_add=True)
      
     size = models.BigIntegerField(verbose_name=u'size')
- 
-    def __unicode__(self):
-        return 'ID: %d | Revision: %d | Name: %s' % (self.identifier, 
-                                                      self.revision, 
-                                                      self.name)
     
     def save(self, *args, **kwargs):
         """Find max id before initial a directory and check required fields."""    
@@ -229,6 +226,11 @@ class File(models.Model):
             else:
                 super(File, self).save(*args, **kwargs)
       
+    def __unicode__(self):
+        return 'ID: %d | Revision: %d | Name: %s' % (self.identifier, 
+                                                      self.revision, 
+                                                      self.name)
+        
     class Meta:
         unique_together = (("identifier", "revision"),)
         verbose_name = "file"

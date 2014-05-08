@@ -42,35 +42,39 @@
   {% for d in dirs %}
   	{# List Collections #}
   	{% if d.type == "c" %}
+  	<form action={% url 'action' rel_path d.name%} method="post">{% csrf_token %}
   	  <tr>
 		<td class="listdir-name"><a class="listdir-name" href={{ d.name|urlencode:"" }}> {{ d.name }} </a></td>
 		<td class="listdir-info"> {{ d.id }} / {{ d.revision }} / {{ d.size }} </td>
 		<td> 
-		  <select class="listdir-action">
+		  <select class="listdir-action" name="listdir-action">
 			<option value="push">push local revision</option>
 			<option value="pull">update to revision</option>
 			<option value="unsubscribe">unsubscribe</option>
 		  </select>
-	 	  <input class="button" type="button" value="OK" />
+	 	  <input class="button" type="submit" value="OK" />
 		</td>
 	  </tr>
+	</form>
   	{% endif %}
   	
   	{# List Directories #}
   	{% if d.type == "d" %}
+  	<form action={% url 'action' rel_path d.name%} method="post">{% csrf_token %}
   	  <tr>
 		<td class="listdir-name"><a class="listdir-name" href={{ d.name|urlencode:"" }}> {{ d.name }} </a></td>
 		<td class="listdir-info"> - / {{ d.revision }} / {{ d.size }} </td>
 		<td>
 			{% if not d.part_of_collection %}
-				<select class="listdir-action">
+				<select class="listdir-action" name="listdir-action">
 				  <option value="add">add to collection</option>
-				  <option value="delete">delete from webfolder</option>
+				  <option value="remove">remove from webfolder</option>
 				</select>
-				<input class="button" type="button" value="OK" />
+				<input class="button" type="submit" value="OK" />
 			{% endif %}
 		</td>
   	  </tr>
+  	</form>
   	{% endif %}
   {% endfor %}
   

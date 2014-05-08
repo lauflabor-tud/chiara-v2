@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import permission_required
 import os, utils.path, utils.units
 from collection.models import Collection
 import webfolder.functions as wf_func
+import collection.functions as col_func
 
 import logging
 logger = logging.getLogger(__name__)
@@ -64,6 +65,32 @@ def my_shared_folder(request, rel_path=''):
                           'rel_parent_path': utils.path.no_slash(os.path.dirname(rel_path)),
                           'dirs': dirs, 
                           'files': files})
+    return HttpResponse(t.render())
+
+
+def action(request, rel_path, dir_name):
+    action = request.POST["listdir-action"]
+    dir_path = os.path.join(rel_path, dir_name)
+    if action=="unsubscribe":
+        collection = wf_func.get_collection(request.user, dir_path)
+        col_func.unsubscribe(request.user, collection)
+        message = "You have successfully unsubsribed the collection '" + dir_name + "'!"
+    elif action=="remove":
+        col_func.remove_from_webfolder(request.user, dir_path)
+        message = "You have successfully removed the directory '" + dir_path + "' from your webfolder!"
+    elif action=="add":
+        col_func.add_to_collections(request.user, dir_path)
+        message = "You have successfully add the directory '" + dir_path + "' to the repository!"
+        pass
+    elif action=="push":
+        pass
+    elif action=="pull":
+        pass
+    else:
+        pass
+    
+    t = TemplateResponse(request, 'info.html', 
+                         {'message': message})
     return HttpResponse(t.render())
 
 
