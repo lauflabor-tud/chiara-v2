@@ -24,7 +24,7 @@ def add_to_collections(user, rel_path):
                              user_modified=user,
                              size=wf_func.get_dir_size(user, rel_path))
         root_dir.save()
-        collection_info.create_traits(user, rel_path, root_dir.id)
+        collection_info.create_traits(user, rel_path, root_dir.identifier)
         root_dir.save_recursive(user, rel_path)
         
         # Create collection
