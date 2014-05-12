@@ -36,7 +36,7 @@
   {# .. to navigate to parent directory #}
   {% if not rel_path == "/" %}
   	<tr>
-  	  <td class="listdir-name"><a class="listdir-name" href={% url 'my_shared_folder' %}{{ rel_parent_path }}> .. </a></td>
+  	  <td class="listdir-name"><a class="listdir-name" href={% url 'my_shared_folder' %}{{ rel_parent_path|urlencode }}> .. </a></td>
   	</tr>
   {% endif %}
   
@@ -49,15 +49,15 @@
 		<td class="listdir-info"> {{ d.id }} / {{ d.revision }} / {{ d.size }} </td>
 		<td> 
 		  <select class="listdir-action" name="operation">
-			<option value="push">push local revision</option>
-			<option value="pull">update to revision</option>
+			<option value="push:commit">push local revision</option>
+			<option value="pull:choose_revision">update to revision</option>
 			<option value="unsubscribe">unsubscribe</option>
 		  </select>
 	 	  <input class="button" type="submit" value="OK" />
 	 	  {# Extra parameters #}
 	 	  {% make_list rel_path d.name as rel_dir_path_list %}
-	 	  <input name="rel_dir_path" type="hidden" value={{ rel_dir_path_list|url_join }} />
-		  <input name="dir_name" type="hidden" value={{ d.name }} />
+	 	  <input name="rel_dir_path" type="hidden" value={{ rel_dir_path_list|url_join|urlencode }} />
+		  <input name="dir_name" type="hidden" value={{ d.name|urlencode }} />
 		  <input name="dir_id" type="hidden" value={{ d.id }} />
 		  <input name="dir_revision" type="hidden" value={{ d.revision }} />
 		</td>
@@ -80,8 +80,8 @@
 				<input class="button" type="submit" value="OK" />
 		 	  	{# Extra parameters #}
 		 	  	{% make_list rel_path d.name as rel_dir_path_list %}
-				<input name="rel_dir_path" type="hidden" value={{ rel_dir_path_list|url_join }} />
-			  	<input name="dir_name" type="hidden" value={{ d.name }} />
+				<input name="rel_dir_path" type="hidden" value={{ rel_dir_path_list|url_join|urlencode }} />
+			  	<input name="dir_name" type="hidden" value={{ d.name|urlencode }} />
 			  	<input name="dir_revision" type="hidden" value={{ d.revision }} />
 			{% endif %}
 		</td>
@@ -94,7 +94,7 @@
   {% for f in files %}
     <tr>
 		{% make_list rel_path f.name as rel_file_path_list %}
-		<td class="listdir-name"><a class="listfile-name" href={% url 'download_to_disk' rel_file_path_list|url_join %}> {{ f.name }} </a></td>
+		<td class="listdir-name"><a class="listfile-name" href={% url 'download_to_disk' rel_file_path_list|url_join|urlencode %}> {{ f.name }} </a></td>
 		<td class="listdir-info"> - / {{ f.revision }} / {{ f.size }} </td>
 		<td> </td>
   	</tr>

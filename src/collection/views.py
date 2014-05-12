@@ -3,13 +3,11 @@ from django.template.response import TemplateResponse
 from django.contrib.auth.decorators import permission_required
 from django.core.servers.basehttp import FileWrapper
 
-import os, utils.path, utils.units
+import os, utils.path, utils.units, urllib
 import mimetypes
 from collection.models import Collection
 import webfolder.functions as wf_func
 import collection.functions as col_func
-
-from chiara.settings.common import SRC_DIR
 
 import logging
 from webfolder.functions import get_abs_path
@@ -81,14 +79,17 @@ def operations(request):
         col_func.unsubscribe(request.user, collection)
         message = "You have successfully unsubsribed the collection '" + collection.directory.name + "'!"
     elif post["operation"]=="remove":
-        col_func.remove_from_webfolder(request.user, post["rel_dir_path"])
-        message = "You have successfully removed the directory '" + post["rel_dir_path"] + "' from your webfolder!"
+        col_func.remove_from_webfolder(request.user, utils.path.url_decode(post["rel_dir_path"]))
+        message = "You have successfully removed the directory '" + utils.path.url_decode(post["rel_dir_path"]) + "' from your webfolder!"
     elif post["operation"]=="add":
-        col_func.add_to_collections(request.user, post["rel_dir_path"])
-        message = "You have successfully add the directory '" + post["rel_dir_path"] + "' to the repository!"
+        col_func.add_to_collections(request.user, utils.path.url_decode(post["rel_dir_path"]))
+        message = "You have successfully add the directory '" + utils.path.url_decode(post["rel_dir_path"]) + "' to the repository!"
+    elif post["operation"]=="push:commit":
         pass
     elif post["operation"]=="push":
-        message = post["rel_dir_path"]
+        pass
+    elif post["operation"]=="pull:choose_revision":
+        pass
     elif post["operation"]=="pull":
         pass
     else:

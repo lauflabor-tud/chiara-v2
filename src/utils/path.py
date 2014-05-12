@@ -1,3 +1,4 @@
+import urllib
 
 def no_slash(path):
     if path=="" or path=="/":
@@ -34,3 +35,6 @@ def both_slash(path):
     if not path.endswith("/"):
         path = path + "/"
     return path
+
+def url_decode(url):
+    return urllib.unquote(url).decode('iso-8859-2')
