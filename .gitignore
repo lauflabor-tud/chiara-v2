@@ -21,3 +21,4 @@ local_settings.py
 src/chiara/settings/local.py
 src/chiara/wsgi.py
 src/webdav/*
+src/repository/*

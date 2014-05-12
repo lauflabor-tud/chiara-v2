@@ -128,6 +128,7 @@ class Directory(models.Model):
                          user_modified=user, 
                          size=wf_func.get_file_size(user, rel_item_path))
                 f.save()
+                wf_func.add_file_to_repository(user, rel_item_path, wf_func.get_repository_file_name(f.identifier, f.revision))
                 self.files.add(f)
             elif wf_func.is_dir(user, rel_item_path):
                 d = Directory(revision=1,

@@ -1,5 +1,5 @@
 import os, shutil, ConfigParser
-from chiara.settings.common import WEBDAV_DIR, COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE, COLLECTION_TRAITS_FILE
+from chiara.settings.common import WEBDAV_DIR, COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE, COLLECTION_TRAITS_FILE, REPOSITORY_DIR
 import utils.path
 
 traits_parser = ConfigParser.RawConfigParser()
@@ -95,4 +95,12 @@ def get_dir_size(user, rel_path):
 def remove_dir_recursive(user, rel_path):
     abs_path = get_abs_path(user, rel_path)
     shutil.rmtree(abs_path)
+
+
+def get_repository_file_name(file_id, file_name):
+    return str(file_id) + "-" + str(file_name) 
+
+def add_file_to_repository(user, rel_src_path, dst_name):
+    abs_src_path = get_abs_path(user, rel_src_path)
+    shutil.copy(abs_src_path, os.path.join(REPOSITORY_DIR, dst_name))
 
