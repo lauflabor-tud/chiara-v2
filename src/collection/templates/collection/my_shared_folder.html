@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load staticfiles %}
+{% load collection_filters %}
 
 {% block head_block %}
 	<link rel="stylesheet" type="text/css" href="{% static 'base/css/my_shared_folder.css' %}">
@@ -42,17 +43,23 @@
   {% for d in dirs %}
   	{# List Collections #}
   	{% if d.type == "c" %}
-  	<form action={% url 'action' rel_path d.name%} method="post">{% csrf_token %}
+  	<form action={% url 'operations'%} method="post">{% csrf_token %}
   	  <tr>
 		<td class="listdir-name"><a class="listdir-name" href={{ d.name|urlencode:"" }}> {{ d.name }} </a></td>
 		<td class="listdir-info"> {{ d.id }} / {{ d.revision }} / {{ d.size }} </td>
 		<td> 
-		  <select class="listdir-action" name="listdir-action">
+		  <select class="listdir-action" name="operation">
 			<option value="push">push local revision</option>
 			<option value="pull">update to revision</option>
 			<option value="unsubscribe">unsubscribe</option>
 		  </select>
 	 	  <input class="button" type="submit" value="OK" />
+	 	  {# Extra parameters #}
+	 	  {% make_list rel_path d.name as rel_dir_path_list %}
+	 	  <input name="rel_dir_path" type="hidden" value={{ rel_dir_path_list|url_join }} />
+		  <input name="dir_name" type="hidden" value={{ d.name }} />
+		  <input name="dir_id" type="hidden" value={{ d.id }} />
+		  <input name="dir_revision" type="hidden" value={{ d.revision }} />
 		</td>
 	  </tr>
 	</form>
@@ -60,17 +67,22 @@
   	
   	{# List Directories #}
   	{% if d.type == "d" %}
-  	<form action={% url 'action' rel_path d.name%} method="post">{% csrf_token %}
+  	<form action={% url 'operations'%} method="post">{% csrf_token %}
   	  <tr>
 		<td class="listdir-name"><a class="listdir-name" href={{ d.name|urlencode:"" }}> {{ d.name }} </a></td>
 		<td class="listdir-info"> - / {{ d.revision }} / {{ d.size }} </td>
 		<td>
 			{% if not d.part_of_collection %}
-				<select class="listdir-action" name="listdir-action">
+				<select class="listdir-action" name="operation">
 				  <option value="add">add to collection</option>
 				  <option value="remove">remove from webfolder</option>
 				</select>
 				<input class="button" type="submit" value="OK" />
+		 	  	{# Extra parameters #}
+		 	  	{% make_list rel_path d.name as rel_dir_path_list %}
+				<input name="rel_dir_path" type="hidden" value={{ rel_dir_path_list|url_join }} />
+			  	<input name="dir_name" type="hidden" value={{ d.name }} />
+			  	<input name="dir_revision" type="hidden" value={{ d.revision }} />
 			{% endif %}
 		</td>
   	  </tr>

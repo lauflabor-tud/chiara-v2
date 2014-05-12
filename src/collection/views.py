@@ -68,23 +68,23 @@ def my_shared_folder(request, rel_path=''):
     return HttpResponse(t.render())
 
 
-def action(request, rel_path, dir_name):
-    action = request.POST["listdir-action"]
-    dir_path = os.path.join(rel_path, dir_name)
-    if action=="unsubscribe":
-        collection = wf_func.get_collection(request.user, dir_path)
+def operations(request):
+
+    post = request.POST
+    if post["operation"]=="unsubscribe":
+        collection = Collection.objects.get(identifier=post["dir_id"], revision=post["dir_revision"])
         col_func.unsubscribe(request.user, collection)
-        message = "You have successfully unsubsribed the collection '" + dir_name + "'!"
-    elif action=="remove":
-        col_func.remove_from_webfolder(request.user, dir_path)
-        message = "You have successfully removed the directory '" + dir_path + "' from your webfolder!"
-    elif action=="add":
-        col_func.add_to_collections(request.user, dir_path)
-        message = "You have successfully add the directory '" + dir_path + "' to the repository!"
+        message = "You have successfully unsubsribed the collection '" + collection.directory.name + "'!"
+    elif post["operation"]=="remove":
+        col_func.remove_from_webfolder(request.user, post["rel_dir_path"])
+        message = "You have successfully removed the directory '" + post["rel_dir_path"] + "' from your webfolder!"
+    elif post["operation"]=="add":
+        col_func.add_to_collections(request.user, post["rel_dir_path"])
+        message = "You have successfully add the directory '" + post["rel_dir_path"] + "' to the repository!"
         pass
-    elif action=="push":
-        pass
-    elif action=="pull":
+    elif post["operation"]=="push":
+        message = request.POST["rel_dir_path"]
+    elif post["operation"]=="pull":
         pass
     else:
         pass
