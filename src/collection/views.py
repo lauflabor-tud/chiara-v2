@@ -1,13 +1,18 @@
 from django.http import HttpResponse, Http404
 from django.template.response import TemplateResponse
 from django.contrib.auth.decorators import permission_required
+from django.core.servers.basehttp import FileWrapper
 
 import os, utils.path, utils.units
+import mimetypes
 from collection.models import Collection
 import webfolder.functions as wf_func
 import collection.functions as col_func
 
+from chiara.settings.common import SRC_DIR
+
 import logging
+from webfolder.functions import get_abs_path
 logger = logging.getLogger(__name__)
 
 def index(request):
@@ -83,7 +88,7 @@ def operations(request):
         message = "You have successfully add the directory '" + post["rel_dir_path"] + "' to the repository!"
         pass
     elif post["operation"]=="push":
-        message = request.POST["rel_dir_path"]
+        message = post["rel_dir_path"]
     elif post["operation"]=="pull":
         pass
     else:
@@ -113,5 +118,16 @@ def manage_my_collections(request):
     t = TemplateResponse(request, 'collection/manage_my_collections.html', 
                          {'collections': collections})
     return HttpResponse(t.render())
+
+
+def download_to_disk(request, rel_file_path):
+    abs_file_path = get_abs_path(request.user, rel_file_path)
+    download_name =os.path.basename(abs_file_path)
+    wrapper = FileWrapper(open(abs_file_path))
+    content_type = mimetypes.guess_type(abs_file_path)[0]
+    response = HttpResponse(wrapper,content_type=content_type)
+    response['Content-Length'] = wf_func.get_file_size(request.user, rel_file_path)   
+    response['Content-Disposition'] = "attachment; filename=%s" % download_name
+    return response
 
 

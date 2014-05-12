@@ -93,7 +93,8 @@
   {# List Files #}
   {% for f in files %}
     <tr>
-		<td class="listdir-name"><a class="listfile-name"> {{ f.name }} </a></td>
+		{% make_list rel_path f.name as rel_file_path_list %}
+		<td class="listdir-name"><a class="listfile-name" href={% url 'download_to_disk' rel_file_path_list|url_join %}> {{ f.name }} </a></td>
 		<td class="listdir-info"> - / {{ f.revision }} / {{ f.size }} </td>
 		<td> </td>
   	</tr>

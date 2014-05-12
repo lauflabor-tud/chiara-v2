@@ -24,6 +24,7 @@ urlpatterns = patterns('',
     url(r'^shared-folder/$', 'collection.views.my_shared_folder', name='my_shared_folder'),
     url(r'^shared-folder/(?P<rel_path>.*)/$', 'collection.views.my_shared_folder', name='my_shared_folder'),
     url(r'^operations/$', 'collection.views.operations', name='operations'),
+    url(r'^download_to_disk/(?P<rel_file_path>.*)/$', 'collection.views.download_to_disk', name='download_to_disk'),
     
     # Retrieve new collections
     url(r'^retrieve/', 'collection.views.retrieve_new_collections', name='retrieve_new_collections'),
