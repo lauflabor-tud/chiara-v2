@@ -66,4 +66,12 @@ def unsubscribe(user, collection):
         subscription.delete()
     except ObjectDoesNotExist:
         pass
+    
+
+def push_local_revision():
+    pass
+
+
+def update_to_revision():
+    pass
         

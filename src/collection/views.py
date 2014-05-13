@@ -85,13 +85,17 @@ def operations(request):
         col_func.add_to_collections(request.user, utils.path.url_decode(post["rel_dir_path"]))
         message = "You have successfully add the directory '" + utils.path.url_decode(post["rel_dir_path"]) + "' to the repository!"
     elif post["operation"]=="push:commit":
-        pass
+        t = TemplateResponse(request, 'collection/push_commit.html')
+        return HttpResponse(t.render())
     elif post["operation"]=="push":
-        pass
+        col_func.push_local_revision()
+        message = "You have successfully pushed the local revision of '" + utils.path.url_decode(post["dir_name"]) + "' to the repository!"
     elif post["operation"]=="pull:choose_revision":
-        pass
+        t = TemplateResponse(request, 'collection/pull_choose_revision.html')
+        return HttpResponse(t.render())
     elif post["operation"]=="pull":
-        pass
+        col_func.update_to_revision()
+        message = "You have successfully updated the ... '" + utils.path.url_decode(post["rel_dir_path"]) + "' to the repository!"
     else:
         pass
     

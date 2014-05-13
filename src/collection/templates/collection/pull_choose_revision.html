@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load collection_filters %}
+
+{% block head_block %}
+	<link rel="stylesheet" type="text/css" href="{% static 'base/css/my_shared_folder.css' %}">
+{% endblock %}
+
+{% block title %} Update to revision {% endblock %}
+
+{% block shared_folder_tab %}
+<td class="tab"><a class="tab-selected" href={% url 'my_shared_folder' %}>My shared folder</a></td>
+{% endblock %}
+
+{% block content %}
+
+<table class="content">
+
+</table>
+
+{% endblock %}
