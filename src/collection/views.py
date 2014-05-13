@@ -2,6 +2,7 @@ from django.http import HttpResponse, Http404
 from django.template.response import TemplateResponse
 from django.contrib.auth.decorators import permission_required
 from django.core.servers.basehttp import FileWrapper
+from exception.exceptions import MissingDescriptionFileException
 
 import os, utils.path, utils.units, urllib
 import mimetypes
@@ -73,6 +74,7 @@ def my_shared_folder(request, rel_path=''):
 
 def operations(request):
 
+    error = False
     post = request.POST
     if post["operation"]=="unsubscribe":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=post["dir_revision"])
@@ -82,8 +84,12 @@ def operations(request):
         col_func.remove_from_webfolder(request.user, utils.path.url_decode(post["rel_dir_path"]))
         message = "You have successfully removed the directory '" + utils.path.url_decode(post["rel_dir_path"]) + "' from your webfolder!"
     elif post["operation"]=="add":
-        col_func.add_to_collections(request.user, utils.path.url_decode(post["rel_dir_path"]))
-        message = "You have successfully add the directory '" + utils.path.url_decode(post["rel_dir_path"]) + "' to the repository!"
+        try:
+            col_func.add_to_collections(request.user, utils.path.url_decode(post["rel_dir_path"]))
+            message = "You have successfully add the directory '" + utils.path.url_decode(post["rel_dir_path"]) + "' to the repository!"
+        except MissingDescriptionFileException:
+            message = "No description file found!"
+            error = True
     elif post["operation"]=="push:commit":
         t = TemplateResponse(request, 'collection/push_commit.html')
         return HttpResponse(t.render())
@@ -99,8 +105,12 @@ def operations(request):
     else:
         pass
     
-    t = TemplateResponse(request, 'info.html', 
-                         {'message': message})
+    if error:
+        t = TemplateResponse(request, 'error.html',
+                             {'message': message})
+    else:
+        t = TemplateResponse(request, 'info.html', 
+                             {'message': message})
     return HttpResponse(t.render())
 
 
