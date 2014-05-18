@@ -22,6 +22,7 @@ class Collection(models.Model):
                                      verbose_name=u'authors', 
                                      related_name='author_of', 
                                      blank=True)
+    comment = models.TextField(verbose_name=u'comment', blank=True)
     
     tags = models.ManyToManyField('collection.Tag', 
                                   verbose_name=u'tags',

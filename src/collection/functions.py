@@ -31,6 +31,7 @@ def add_to_collections(user, rel_path):
     collection.save()
     collection.summary = desc_parser.get_summary()
     collection.details = desc_parser.get_details()
+    collection.comment = "Add the collection to the repository."
     collection.save()
     for (key,value) in desc_parser.get_tags():
         tag = Tag(key=key, value=value)
