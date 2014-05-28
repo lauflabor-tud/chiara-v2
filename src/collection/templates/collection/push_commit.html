@@ -15,7 +15,24 @@
 {% block content %}
 
 <table class="content">
-
+	<form action={% url 'operations' %} method="post">{% csrf_token %}
+		<tr>
+  			<td class="description"> Collection: <span class="normal_text"> {{ request.POST|dict_get:"dir_name"|urldecode }} </span></td>
+  		</tr>
+  		<tr>
+  			<td class="description"> Comment: </td>
+  		</tr>
+  		<tr>
+  			<td><textarea class="comment" rows="4" cols="50" id="comment" name="comment"> </textarea></td>
+  		</tr>
+  		<tr>
+			<td><input class="push" name="operation" type="submit" value="push" /></td>
+  		</tr>
+  		{# Extra parameters #}
+  		<input name="rel_dir_path" type="hidden" value={{ request.POST|dict_get:"rel_dir_path" }} />
+		<input name="dir_name" type="hidden" value={{ request.POST|dict_get:"dir_name" }} />
+		<input name="dir_revision" type="hidden" value={{ request.POST|dict_get:"dir_revision" }} />
+	</form>
  </table>
 
 {% endblock %}

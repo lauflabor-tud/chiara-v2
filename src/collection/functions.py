@@ -65,8 +65,8 @@ def unsubscribe(user, collection):
         pass
     
 
-def push_local_revision():
-    pass
+def push_local_revision(user, rel_path):
+    collection = wf_func.get_collection(user, rel_path)
 
 
 def update_to_revision():

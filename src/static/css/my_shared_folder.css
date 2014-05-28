@@ -1,6 +1,9 @@
+/* COMMON */
+/* ====== */
 th.listdir {
   font: normal bold 12px Verdana, Arial, Helvetica;
   text-decoration: underline;
+  padding-top: 15px;
   margin-left: 10px;
   width: 33%;
   text-align: left;
@@ -32,4 +35,38 @@ a.listfile-name {
 }
 a.listfile-name:hover {
   color: #8a8a8a;
+}
+/* PUSH LOKAL REVISION */
+/* =================== */
+textarea.comment {
+  margin-left: 20px;
+}
+input.push {
+  margin-left: 20px;
+}
+/* UPDATE TO REVISION */
+/* ================== */
+select.revision {
+  margin-left: 20px;
+}
+table.compendium {
+  font: normal 12px Verdana, Arial, Helvetica;
+  margin-top: 10px;
+  margin-left: 20px;
+  text-align: left;
+  border-collapse: collapse;
+}
+th.compendium {
+  font-weight: bold;
+  padding: 6px;
+  background: #b9c9fe;
+  border-top: 4px solid #aabcfe;
+  border-bottom: 1px solid #fff;
+  color: #203080;
+}
+td.compendium {
+  padding: 6px;
+  color: #807040;
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid #fff;
 }

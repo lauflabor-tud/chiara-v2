@@ -58,11 +58,12 @@ class Collection(models.Model):
             else:
                 return None
         return sub_dir
+    
 
     def save(self, *args, **kwargs):
         """Find id before initial a directory and check required fields."""
         # initial collection
-        if not self.id:
+        if not self.id and self.revision==1:
             # raise exception if no directory
             if self.directory_id==None:
                 raise IntegrityError("collection_collection.directory may not be NULL")
@@ -143,7 +144,7 @@ class Directory(models.Model):
     def save(self, *args, **kwargs):
         """Find max id before initial a directory and check required fields."""
         # initial directory
-        if not self.id:
+        if not self.id and self.revision==1:
             created = False
             while not created:
                 try:
@@ -202,7 +203,7 @@ class File(models.Model):
     def save(self, *args, **kwargs):
         """Find max id before initial a directory and check required fields."""    
         # initial file
-        if not self.id:
+        if not self.id and self.revision==1:
             created = False
             while not created:
                 try:

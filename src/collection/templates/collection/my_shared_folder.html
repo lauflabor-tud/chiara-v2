@@ -22,7 +22,7 @@
 <table class="content">
   {# Current Directory #}
   <tr>
-  	<td class="description" colspan="3"> Current directory: <span class="normal_text"> {{ rel_path }} </span></p>
+  	<td class="description" colspan="3"> Current directory: <span class="normal_text"> {{ rel_path }} </span></td>
   </tr>
   
   {# Header #}
@@ -46,7 +46,7 @@
   	<form action={% url 'operations'%} method="post">{% csrf_token %}
   	  <tr>
 		<td class="listdir-name"><a class="listdir-name" href={{ d.name|urlencode:"" }}> {{ d.name }} </a></td>
-		<td class="listdir-info"> {{ d.id }} / {{ d.revision }} / {{ d.size }} </td>
+		<td class="listdir-info"><div> {{ d.id }} / {{ d.revision }} / {{ d.size }} </div></td>
 		<td> 
 		  <select class="listdir-action" name="operation">
 			<option value="push:commit">push local revision</option>

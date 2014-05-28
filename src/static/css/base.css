@@ -23,7 +23,12 @@ div.content-frame {
 .info {
   font: normal bold 12px Verdana, Arial, Helvetica;
 }
+.error {
+  font: normal bold 12px Verdana, Arial, Helvetica;
+  color: #cf2040;
+}
 .description {
+  padding-top: 10px;
   font: normal bold 12px Verdana, Arial, Helvetica;
 }
 .normal_text {

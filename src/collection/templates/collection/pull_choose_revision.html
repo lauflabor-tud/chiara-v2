@@ -9,13 +9,53 @@
 {% block title %} Update to revision {% endblock %}
 
 {% block shared_folder_tab %}
-<td class="tab"><a class="tab-selected" href={% url 'my_shared_folder' %}>My shared folder</a></td>
+<td class="tab"><a class="tab-selected" href={% url 'my_shared_folder' %}> My shared folder </a></td>
 {% endblock %}
 
 {% block content %}
 
 <table class="content">
-
+	<form action={% url 'operations' %} method="pull">{% csrf_token %}
+		<tr>
+  			<td class="description"> Collection: <span class="normal_text"> {{ request.POST|dict_get:"dir_name"|urldecode }} </span></td>
+  		</tr>
+  		<tr>
+  			<td class="description"> Revision: </td>
+  		</tr>
+	  	<tr>
+	  		<td><select class="revision" name="revision">
+  			{% for c in collections %}
+				<option value="rev"> {{ c.revision }} </option>
+		  	{% endfor %}
+		  	</select>
+			<input class="button" name="operation" type="submit" value="pull" /></td>
+	  	</tr>
+  		<tr>
+  			<td class="description"> Compendium: </td>
+  		</tr>
+  		<tr>
+  			<table class="compendium">
+        		<tr>
+        			<th class="compendium"> Revision </th>
+        			<th class="compendium"> Comment </th>
+        			<th class="compendium"> Date modified </th>
+        			<th class="compendium"> User modified </th>
+        		</tr>
+        		{% for c in collections %}
+        			<tr>
+        				<td class="compendium"> {{ c.revision }} </td>
+        				<td class="compendium"> {{ c.comment }} </td>
+        				<td class="compendium"> {{ c.directory.date_modified }} </td>
+        				<td class="compendium"> {{ c.directory.user_modified }} </td>
+    				</tr>
+    			{% endfor %}
+    		</table>
+  		</tr>
+  		{# Extra parameters #}
+  		<input name="rel_dir_path" type="hidden" value={{ request.POST|dict_get:"rel_dir_path" }} />
+		<input name="dir_name" type="hidden" value={{ request.POST|dict_get:"dir_name" }} />
+		<input name="dir_revision" type="hidden" value={{ request.POST|dict_get:"dir_revision" }} />
+	</form>
 </table>
 
 {% endblock %}

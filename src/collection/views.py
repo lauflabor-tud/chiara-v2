@@ -97,7 +97,10 @@ def operations(request):
         col_func.push_local_revision()
         message = "You have successfully pushed the local revision of '" + utils.path.url_decode(post["dir_name"]) + "' to the repository!"
     elif post["operation"]=="pull:choose_revision":
-        t = TemplateResponse(request, 'collection/pull_choose_revision.html')
+        collections = Collection.objects.filter(identifier=post["dir_id"])
+        t = TemplateResponse(request, 'collection/pull_choose_revision.html',
+                             {'dir_name': post["dir_name"],
+                              'collections': collections})
         return HttpResponse(t.render())
     elif post["operation"]=="pull":
         col_func.update_to_revision()
