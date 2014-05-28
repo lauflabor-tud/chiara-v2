@@ -94,13 +94,25 @@ def get_dir_size(user, rel_path):
 
 def remove_dir_recursive(user, rel_path):
     abs_path = get_abs_path(user, rel_path)
-    shutil.rmtree(abs_path)
+    if os.path.exists(abs_path):
+        shutil.rmtree(abs_path)
 
 
-def get_repository_file_name(file_id, file_name):
-    return str(file_id) + "-" + str(file_name) 
+def get_repository_file_name(file_id, file_rev):
+    return str(file_id) + "-" + str(file_rev) 
 
-def add_file_to_repository(user, rel_src_path, dst_name):
+
+def copy_file_to_repository(user, rel_src_path, dst_name):
     abs_src_path = get_abs_path(user, rel_src_path)
     shutil.copy(abs_src_path, os.path.join(REPOSITORY_DIR, dst_name))
+
+    
+def copy_file_to_webfolder(user, src_name, rel_dst_path):
+    abs_dst_path = get_abs_path(user, rel_dst_path)
+    shutil.copy(os.path.join(REPOSITORY_DIR, src_name), abs_dst_path)
+
+    
+def create_directory(user, rel_path):
+    abs_path = get_abs_path(user, rel_path)
+    os.makedirs(abs_path)
 

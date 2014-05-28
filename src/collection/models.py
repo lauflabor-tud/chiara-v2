@@ -55,7 +55,7 @@ class Collection(models.Model):
         # walk down to last directory
         for d in dirs:
             sub_dir = sub_dir.sub_directories.filter(name=d)
-            # check if directoy exists
+            # check if directory exists
             if(sub_dir):
                 sub_dir = sub_dir[0]
             else:
@@ -106,11 +106,21 @@ class Collection(models.Model):
 
     
     def push_local_revision(self, user, rel_path):
+        """Push the local revision to the repository."""
         pass
     
     
     def download(self, user, rel_path):
-        pass
+        """Download the collection into the given directory of the user's webfolder."""
+        # copy files into the webfolder
+        rel_dir_path = os.path.join(rel_path, self.directory.name)
+        webfolder.remove_dir_recursive(user, rel_dir_path)
+        webfolder.create_directory(user, rel_dir_path)
+        self.directory.download_recursive(user, rel_dir_path)
+        # Set user subscription
+        subscription = Subscription(collection=self,
+                                    user=user)
+        subscription.save()
     
 
     def unsubscribe(self, user):
@@ -177,9 +187,11 @@ class Directory(models.Model):
      
     size = models.BigIntegerField(verbose_name=u'size')
  
+ 
     def is_root(self):
         """Check if this directory is the root directory."""
         return len(self.parent_directory.all())==0
+ 
         
     def save_recursive(self, user, rel_path):
         """Save all subdirectories and files of this directory and 
@@ -192,7 +204,7 @@ class Directory(models.Model):
                          user_modified=user, 
                          size=webfolder.get_file_size(user, rel_item_path))
                 f.save()
-                webfolder.add_file_to_repository(user, rel_item_path, webfolder.get_repository_file_name(f.identifier, f.revision))
+                webfolder.copy_file_to_repository(user, rel_item_path, webfolder.get_repository_file_name(f.identifier, f.revision))
                 self.files.add(f)
             elif webfolder.is_dir(user, rel_item_path):
                 d = Directory(revision=1,
@@ -202,6 +214,20 @@ class Directory(models.Model):
                 d.save()
                 self.sub_directories.add(d)
                 d.save_recursive(user, rel_item_path)
+
+ 
+    def download_recursive(self, user, rel_path):
+        """Download all subdirectories and files of this directory."""
+        # download files
+        for f in self.files.all():
+            webfolder.copy_file_to_webfolder(user, webfolder.get_repository_file_name(f.identifier, f.revision), 
+                                             os.path.join(rel_path, f.name))
+        # download directories
+        for d in self.sub_directories.all():
+            rel_dir_path = os.path.join(rel_path, d.name)
+            webfolder.create_directory(user, rel_dir_path)
+            d.download_recursive(user, rel_dir_path)
+                       
 
     def save(self, *args, **kwargs):
         """Find max id before initial a directory and check required fields."""

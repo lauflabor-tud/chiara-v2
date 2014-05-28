@@ -186,7 +186,6 @@ class UserPermission(models.Model):
                                                                   self.collection.directory.identifier,
                                                                   self.permission)
 
-#
 
 class Subscription(models.Model):
     """This model manages all subscribed collections of
@@ -203,5 +202,12 @@ class Subscription(models.Model):
         return 'User: %s | Collection ID: %d' % (self.user, 
                                                  self.collection.directory.identifier)
     
-    
+    def save(self, *args, **kwargs):
+        # remove all subscribed revisions of this collection
+        cols_with_same_id = self.user.subscriptions.filter(identifier=self.collection.identifier)
+        for c in cols_with_same_id:
+            subscription = Subscription.objects.get(user=self.user, collection=c)
+            subscription.delete()
+        
+        super(Subscription, self).save()
     
