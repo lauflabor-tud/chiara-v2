@@ -15,7 +15,7 @@
 {% block content %}
 
 <table class="content">
-	<form action={% url 'operations' %} method="pull">{% csrf_token %}
+	<form action={% url 'operations' %} method="post">{% csrf_token %}
 		<tr>
   			<td class="description"> Collection: <span class="normal_text"> {{ request.POST|dict_get:"dir_name"|urldecode }} </span></td>
   		</tr>
@@ -25,7 +25,7 @@
 	  	<tr>
 	  		<td><select class="revision" name="revision">
   			{% for c in collections %}
-				<option value="rev"> {{ c.revision }} </option>
+				<option value="{{ c.revision }}"> {{ c.revision }} </option>
 		  	{% endfor %}
 		  	</select>
 			<input class="button" name="operation" type="submit" value="pull" /></td>
@@ -54,6 +54,7 @@
   		{# Extra parameters #}
   		<input name="rel_dir_path" type="hidden" value={{ request.POST|dict_get:"rel_dir_path" }} />
 		<input name="dir_name" type="hidden" value={{ request.POST|dict_get:"dir_name" }} />
+		<input name="dir_id" type="hidden" value={{ request.POST|dict_get:"dir_id" }} />
 		<input name="dir_revision" type="hidden" value={{ request.POST|dict_get:"dir_revision" }} />
 	</form>
 </table>

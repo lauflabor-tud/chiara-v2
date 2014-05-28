@@ -1,6 +1,9 @@
 from django.db import models, IntegrityError
+from django.core.exceptions import ObjectDoesNotExist
 import os, utils.path
-import webfolder.functions as wf_func
+from authentication.models import UserPermission, Subscription
+from utils.enums import Permission
+from collection import info, webfolder
 
 import logging
 logger = logging.getLogger(__name__)
@@ -59,6 +62,65 @@ class Collection(models.Model):
                 return None
         return sub_dir
     
+    def add_to_collection(self, user, rel_path):
+        """Adds the given user directory to collection repository 
+        with all subdirectories and files. Also sets the user permission
+        and subscription."""
+        # read description file
+        desc_parser = info.parse_description(user, rel_path)
+        
+        # Create root directory and save it with all subdirectories and files
+        item = os.path.basename(rel_path)
+        root_dir = Directory(revision=1,
+                             name=item,
+                             user_modified=user,
+                             size=webfolder.get_dir_size(user, rel_path))
+        root_dir.save()
+        info.create_traits(user, rel_path, root_dir.identifier)
+        root_dir.save_recursive(user, rel_path)
+        
+        # Set collection attributes
+        self.directory = root_dir
+        self.revision = 1
+        self.save()
+        self.summary = desc_parser.get_summary()
+        self.details = desc_parser.get_details()
+        self.comment = "Add the collection to the repository."
+        self.save()
+        for (key,value) in desc_parser.get_tags():
+            tag = Tag(key=key, value=value)
+            tag.save()
+            self.tags.add(tag)
+    
+        # Set user access
+        permission = UserPermission(collection=self,
+                                    user=user,
+                                    permission=Permission.WRITE)
+        permission.save()
+        self.authors.add(user)
+        
+        # Set user subscription
+        subscription = Subscription(collection=self,
+                                    user=user)
+        subscription.save()
+
+    
+    def push_local_revision(self, user, rel_path):
+        pass
+    
+    
+    def download(self, user, rel_path):
+        pass
+    
+
+    def unsubscribe(self, user):
+        """Unsubscribe the collection of the user."""
+        try:
+            subscription = Subscription.objects.get(user=user, collection=self)
+            subscription.delete()
+        except ObjectDoesNotExist:
+            pass
+
 
     def save(self, *args, **kwargs):
         """Find id before initial a directory and check required fields."""
@@ -122,21 +184,21 @@ class Directory(models.Model):
     def save_recursive(self, user, rel_path):
         """Save all subdirectories and files of this directory and 
         create connections to this directory."""
-        for item in wf_func.list_dir(user, rel_path):
+        for item in webfolder.list_dir(user, rel_path):
             rel_item_path = os.path.join(rel_path, item)
-            if wf_func.is_file(user, rel_item_path):                
+            if webfolder.is_file(user, rel_item_path):                
                 f = File(revision=1, 
                          name=item, 
                          user_modified=user, 
-                         size=wf_func.get_file_size(user, rel_item_path))
+                         size=webfolder.get_file_size(user, rel_item_path))
                 f.save()
-                wf_func.add_file_to_repository(user, rel_item_path, wf_func.get_repository_file_name(f.identifier, f.revision))
+                webfolder.add_file_to_repository(user, rel_item_path, webfolder.get_repository_file_name(f.identifier, f.revision))
                 self.files.add(f)
-            elif wf_func.is_dir(user, rel_item_path):
+            elif webfolder.is_dir(user, rel_item_path):
                 d = Directory(revision=1,
                               name=item,
                               user_modified=user,
-                              size=wf_func.get_dir_size(user, rel_item_path))
+                              size=webfolder.get_dir_size(user, rel_item_path))
                 d.save()
                 self.sub_directories.add(d)
                 d.save_recursive(user, rel_item_path)

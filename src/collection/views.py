@@ -4,14 +4,13 @@ from django.contrib.auth.decorators import permission_required
 from django.core.servers.basehttp import FileWrapper
 from exception.exceptions import MissingDescriptionFileException
 
-import os, utils.path, utils.units, urllib
+import os, utils.path, utils.units
 import mimetypes
 from collection.models import Collection
-import webfolder.functions as wf_func
-import collection.functions as col_func
+from collection import webfolder
 
 import logging
-from webfolder.functions import get_abs_path
+from collection.webfolder import get_abs_path
 logger = logging.getLogger(__name__)
 
 def index(request):
@@ -35,19 +34,19 @@ def my_shared_folder(request, rel_path=''):
     # class the files in categories collection, directory or file
     dirs = []
     files = []
-    for item_name in wf_func.list_dir(request.user, rel_path):
+    for item_name in webfolder.list_dir(request.user, rel_path):
         rel_item_path = os.path.join(utils.path.no_slash(rel_path), item_name)
-        if wf_func.is_file(request.user, rel_item_path):
-            file_size = wf_func.get_file_size(request.user, rel_item_path)
-            f = wf_func.get_file(request.user, rel_item_path)
+        if webfolder.is_file(request.user, rel_item_path):
+            file_size = webfolder.get_file_size(request.user, rel_item_path)
+            f = webfolder.get_file(request.user, rel_item_path)
             file_revision = f.revision if f else "-" 
             files.append({"name": item_name, 
                           "size": utils.units.convert_data_size(file_size), 
                           "revision": file_revision,
                           "part_of_collection": bool(f)})
-        elif wf_func.is_dir(request.user, rel_item_path):
-            collection = wf_func.get_collection(request.user, rel_item_path)
-            dir_size = wf_func.get_dir_size(request.user, rel_item_path)
+        elif webfolder.is_dir(request.user, rel_item_path):
+            collection = webfolder.get_collection(request.user, rel_item_path)
+            dir_size = webfolder.get_dir_size(request.user, rel_item_path)
             if collection:
                 dirs.append({"type": "c",
                              "id": collection.identifier,
@@ -55,7 +54,7 @@ def my_shared_folder(request, rel_path=''):
                              "size": utils.units.convert_data_size(dir_size), 
                              "revision": collection.revision})
             else:
-                d = wf_func.get_dir(request.user, rel_item_path)
+                d = webfolder.get_dir(request.user, rel_item_path)
                 dir_revision = d.revision if d else "-"
                 dirs.append({"type": "d",
                              "name": item_name, 
@@ -76,35 +75,45 @@ def operations(request):
 
     error = False
     post = request.POST
+    # unsubscribe collection
     if post["operation"]=="unsubscribe":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=post["dir_revision"])
-        col_func.unsubscribe(request.user, collection)
+        collection.unsubscribe(request.user)
         message = "You have successfully unsubsribed the collection '" + collection.directory.name + "'!"
+    # remove directory in webfolder
     elif post["operation"]=="remove":
-        col_func.remove_from_webfolder(request.user, utils.path.url_decode(post["rel_dir_path"]))
+        webfolder.remove_dir_recursive(request.user, utils.path.url_decode(post["rel_dir_path"]))
         message = "You have successfully removed the directory '" + utils.path.url_decode(post["rel_dir_path"]) + "' from your webfolder!"
+    # add to repository
     elif post["operation"]=="add":
         try:
-            col_func.add_to_collections(request.user, utils.path.url_decode(post["rel_dir_path"]))
+            collection = Collection()
+            collection.add_to_collection(request.user, utils.path.url_decode(post["rel_dir_path"]))
             message = "You have successfully add the directory '" + utils.path.url_decode(post["rel_dir_path"]) + "' to the repository!"
         except MissingDescriptionFileException:
             message = "No description file found!"
             error = True
+    # show commit view for pushing
     elif post["operation"]=="push:commit":
         t = TemplateResponse(request, 'collection/push_commit.html')
         return HttpResponse(t.render())
+    # push collection
     elif post["operation"]=="push":
-        col_func.push_local_revision()
-        message = "You have successfully pushed the local revision of '" + utils.path.url_decode(post["dir_name"]) + "' to the repository!"
+        collection = Collection.objects.get(identifier=post["dir_id"], revision=post["dir_revision"])
+        collection.push_local_revision(request.user, utils.path.url_decode(post["rel_dir_path"]))
+        message = "You have successfully pushed the local revision of '" + collection.directory.name + "' to the repository!"
+    # show revision view for pulling
     elif post["operation"]=="pull:choose_revision":
         collections = Collection.objects.filter(identifier=post["dir_id"])
         t = TemplateResponse(request, 'collection/pull_choose_revision.html',
                              {'dir_name': post["dir_name"],
                               'collections': collections})
         return HttpResponse(t.render())
+    # pull collection
     elif post["operation"]=="pull":
-        col_func.update_to_revision()
-        message = "You have successfully updated the ... '" + utils.path.url_decode(post["rel_dir_path"]) + "' to the repository!"
+        collection = Collection.objects.get(identifier=post["dir_id"], revision=post["revision"])
+        collection.download(request.user, os.path.dirname(utils.path.left_slash(utils.path.url_decode(post["rel_dir_path"]))))
+        message = "You have successfully updated the collection '" + collection.directory.name + "' to revision " + str(collection.revision) + "!"
     else:
         pass
     
@@ -144,7 +153,7 @@ def download_to_disk(request, rel_file_path):
     wrapper = FileWrapper(open(abs_file_path))
     content_type = mimetypes.guess_type(abs_file_path)[0]
     response = HttpResponse(wrapper,content_type=content_type)
-    response['Content-Length'] = wf_func.get_file_size(request.user, rel_file_path)   
+    response['Content-Length'] = webfolder.get_file_size(request.user, rel_file_path)   
     response['Content-Disposition'] = "attachment; filename=%s" % download_name
     return response
 
