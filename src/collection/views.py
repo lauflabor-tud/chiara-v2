@@ -2,7 +2,7 @@ from django.http import HttpResponse, Http404
 from django.template.response import TemplateResponse
 from django.contrib.auth.decorators import permission_required
 from django.core.servers.basehttp import FileWrapper
-from exception.exceptions import MissingDescriptionFileException
+from exception.exceptions import *
 
 import os, utils.path, utils.units
 import mimetypes
@@ -95,13 +95,18 @@ def operations(request):
             error = True
     # show commit view for pushing
     elif post["operation"]=="push:commit":
-        t = TemplateResponse(request, 'collection/push_commit.html')
-        return HttpResponse(t.render())
+            t = TemplateResponse(request, 'collection/push_commit.html')
+            return HttpResponse(t.render())
     # push collection
     elif post["operation"]=="push":
-        collection = Collection.objects.get(identifier=post["dir_id"], revision=post["dir_revision"])
-        collection.push_local_revision(request.user, utils.path.url_decode(post["rel_dir_path"]))
-        message = "You have successfully pushed the local revision of '" + collection.directory.name + "' to the repository!"
+        try:
+            prev_col = Collection.objects.get(identifier=post["dir_id"], revision=post["dir_revision"])
+            collection = Collection()
+            collection.push_local_revision(request.user, utils.path.url_decode(post["rel_dir_path"]), prev_col, post["comment"])
+            message = "You have successfully pushed the local revision of '" + collection.directory.name + "' to the repository!"
+        except NoLocalChangesException: 
+            message = "No local changes!"
+            error = True
     # show revision view for pulling
     elif post["operation"]=="pull:choose_revision":
         collections = Collection.objects.filter(identifier=post["dir_id"])

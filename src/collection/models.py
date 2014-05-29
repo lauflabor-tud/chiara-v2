@@ -1,9 +1,10 @@
 from django.db import models, IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
-import os, utils.path
+import os, utils.path, utils.hash
 from authentication.models import UserPermission, Subscription
 from utils.enums import Permission
 from collection import info, webfolder
+from exception.exceptions import NoLocalChangesException
 
 import logging
 logger = logging.getLogger(__name__)
@@ -78,6 +79,7 @@ class Collection(models.Model):
         root_dir.save()
         info.create_traits(user, rel_path, root_dir.identifier)
         root_dir.save_recursive(user, rel_path)
+        root_dir.save()
         
         # Set collection attributes
         self.directory = root_dir
@@ -105,11 +107,53 @@ class Collection(models.Model):
         subscription.save()
 
     
-    def push_local_revision(self, user, rel_path):
+    def push_local_revision(self, user, rel_path, prev_col, comment):
         """Push the local revision to the repository."""
-        pass
-    
-    
+        # read description file
+        desc_parser = info.parse_description(user, rel_path)
+        
+        # Create root directory and update it with the local revision
+        item = os.path.basename(rel_path)
+        root_dir = Directory(identifier=prev_col.directory.identifier,
+                             revision=prev_col.revision+1,
+                             name=item,
+                             user_modified=user,
+                             size=webfolder.get_dir_size(user, rel_path))
+        root_dir.save()
+        info.create_traits(user, rel_path, root_dir.identifier)
+        root_dir.push_recursive(user, rel_path, prev_col.directory)
+        
+        if root_dir.hash == prev_col.directory.hash:
+            root_dir.delete()
+            raise NoLocalChangesException()
+        else:
+            # Set collection attributes
+            self.identifier = prev_col.identifier
+            self.directory = root_dir
+            self.revision = prev_col.revision+1
+            self.save()
+            self.summary = desc_parser.get_summary()
+            self.details = desc_parser.get_details()
+            self.comment = comment
+            self.save()
+            for (key,value) in desc_parser.get_tags():
+                tag = Tag(key=key, value=value)
+                tag.save()
+                self.tags.add(tag)
+        
+            # Set user access
+            permission = UserPermission(collection=self,
+                                        user=user,
+                                        permission=Permission.WRITE)
+            permission.save()
+            self.authors.add(user)
+            
+            # Set user subscription
+            subscription = Subscription(collection=self,
+                                        user=user)
+            subscription.save()
+            
+            
     def download(self, user, rel_path):
         """Download the collection into the given directory of the user's webfolder."""
         # copy files into the webfolder
@@ -180,13 +224,11 @@ class Directory(models.Model):
     user_modified = models.ForeignKey('authentication.User', 
                                       verbose_name=u'user who modified',
                                       related_name='directory_modified')
-    date_created = models.DateField(verbose_name=u'creation date', 
-                                    auto_now_add=True, 
-                                    editable=False)
     date_modified = models.DateField(verbose_name=u'last modified', auto_now_add=True)
      
     size = models.BigIntegerField(verbose_name=u'size')
  
+    hash = models.CharField(verbose_name=u'hash', max_length=64)
  
     def is_root(self):
         """Check if this directory is the root directory."""
@@ -196,25 +238,112 @@ class Directory(models.Model):
     def save_recursive(self, user, rel_path):
         """Save all subdirectories and files of this directory and 
         create connections to this directory."""
+        item_hashs = []
+        # Save recursive files and directories
         for item in webfolder.list_dir(user, rel_path):
             rel_item_path = os.path.join(rel_path, item)
             if webfolder.is_file(user, rel_item_path):                
                 f = File(revision=1, 
                          name=item, 
                          user_modified=user, 
-                         size=webfolder.get_file_size(user, rel_item_path))
+                         size=webfolder.get_file_size(user, rel_item_path),
+                         hash=utils.hash.hash_file(webfolder.get_abs_path(user, rel_item_path))
+                         )
                 f.save()
                 webfolder.copy_file_to_repository(user, rel_item_path, webfolder.get_repository_file_name(f.identifier, f.revision))
                 self.files.add(f)
+                item_hashs.append(f.hash)
             elif webfolder.is_dir(user, rel_item_path):
                 d = Directory(revision=1,
                               name=item,
                               user_modified=user,
                               size=webfolder.get_dir_size(user, rel_item_path))
+                
                 d.save()
-                self.sub_directories.add(d)
                 d.save_recursive(user, rel_item_path)
-
+                self.sub_directories.add(d)
+                item_hashs.append(d.hash)
+        # Set directory hash
+        self.hash = utils.hash.hash_dir(self.name, item_hashs)
+        self.save()
+    
+    
+    def push_recursive(self, user, rel_path, prev_dir):
+        """Push the local changes of this directory as a new revision."""
+        
+        item_hashs = []
+        
+        for item in webfolder.list_dir(user, rel_path):
+            rel_item_path = os.path.join(rel_path, item)
+            # item is a file
+            if webfolder.is_file(user, rel_item_path):
+                prev_f = prev_dir.files.filter(name=item)
+                # file is new
+                if not prev_f:
+                    f = File(revision=1, 
+                             name=item, 
+                             user_modified=user, 
+                             size=webfolder.get_file_size(user, rel_item_path),
+                             hash=utils.hash.hash_file(webfolder.get_abs_path(user, rel_item_path)))
+                    f.save()
+                    webfolder.copy_file_to_repository(user, rel_item_path, webfolder.get_repository_file_name(f.identifier, f.revision))
+                    self.files.add(f)
+                    item_hashs.append(f.hash)
+                # file is not new
+                else:
+                    f = File(identifier=prev_f[0].identifier,
+                             revision=prev_f[0].revision+1, 
+                             name=item, 
+                             user_modified=user, 
+                             size=webfolder.get_file_size(user, rel_item_path),
+                             hash=utils.hash.hash_file(webfolder.get_abs_path(user, rel_item_path)))
+                    # file was modified
+                    if not prev_f[0].hash == f.hash:
+                        f.save()
+                        webfolder.copy_file_to_repository(user, rel_item_path, webfolder.get_repository_file_name(f.identifier, f.revision))
+                        self.files.add(f)
+                        item_hashs.append(f.hash)
+                    # file was not modified
+                    else:
+                        self.files.add(prev_f[0])
+                        item_hashs.append(prev_f[0].hash)
+                
+            # item is a directory
+            elif webfolder.is_dir(user, rel_item_path):
+                prev_d = prev_dir.sub_directories.filter(name=item)
+                # directory is new
+                if not prev_d:
+                    d = Directory(revision=1,
+                                  name=item,
+                                  user_modified=user,
+                                  size=webfolder.get_dir_size(user, rel_item_path))
+                    d.save()
+                    self.sub_directories.add(d)
+                    d.save_recursive(user, rel_item_path)
+                    item_hashs.append(d.hash)
+                # directory is not new
+                else:
+                    d = Directory(identifier=prev_d[0].identifier,
+                                  revision=prev_d[0].revision+1,
+                                  name=item,
+                                  user_modified=user,
+                                  size=webfolder.get_dir_size(user, rel_item_path))
+                    d.save()
+                    d.push_recursive(user, rel_item_path, prev_d[0])
+                    # directory was modified
+                    if not prev_d[0].hash == d.hash:
+                        self.sub_directories.add(d)
+                        item_hashs.append(d.hash)
+                    # directory was not modified
+                    else:
+                        d.delete()
+                        self.sub_directories.add(prev_d[0])
+                        item_hashs.append(prev_d[0].hash)
+                    
+        # Set directory hash
+        self.hash = utils.hash.hash_dir(self.name, item_hashs)
+        self.save()
+                
  
     def download_recursive(self, user, rel_path):
         """Download all subdirectories and files of this directory."""
@@ -288,6 +417,8 @@ class File(models.Model):
      
     size = models.BigIntegerField(verbose_name=u'size')
     
+    hash = models.CharField(verbose_name=u'hash', max_length=64)
+    
     def save(self, *args, **kwargs):
         """Find max id before initial a directory and check required fields."""    
         # initial file
@@ -326,7 +457,6 @@ class File(models.Model):
         unique_together = (("identifier", "revision"),)
         verbose_name = "file"
         verbose_name_plural = "files"
- 
  
  
 class Tag(models.Model):
