@@ -2,7 +2,7 @@ from django.db import models, IntegrityError
 from django.db.models import Max
 from django.core.exceptions import ObjectDoesNotExist
 import os, utils.path, utils.hash
-from authentication.models import UserPermission, Subscription
+from authentication.models import UserPermission, GroupPermission, Subscription
 from utils.enums import Permission
 from collection import info, webfolder
 from exception.exceptions import *
@@ -32,11 +32,17 @@ class Collection(models.Model):
     tags = models.ManyToManyField('collection.Tag', 
                                   verbose_name=u'tags',
                                   related_name='collections',
-                                  blank=True) 
+                                  blank=True)
     
-    def get_name(self):
-        """Returns the name of this collection."""
+    @property        
+    def name(self):
         return self.directory.name
+    
+    def get_revision(self, revision):
+        return Collection.objects.get(identifier=self.identifier, revision=revision)
+    
+    def get_all_revisions(self):
+        return Collection.objects.filter(identifier=self.identifier)
     
     def get_file(self, path):
         """Returns the file of the given relative path."""
@@ -148,10 +154,8 @@ class Collection(models.Model):
                     self.tags.add(tag)
             
                 # Set user access
-                permission = UserPermission(collection=self,
-                                            user=user,
-                                            permission=Permission.WRITE)
-                permission.save()
+                UserPermission.update(self)
+                GroupPermission.update(self)
                 self.authors.add(user)
                 
                 # Set user subscription

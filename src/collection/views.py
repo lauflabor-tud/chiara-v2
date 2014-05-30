@@ -96,8 +96,8 @@ def operations(request):
             error = True
     # show commit view for pushing
     elif post["operation"]=="push:commit":
-            t = TemplateResponse(request, 'collection/push_commit.html')
-            return HttpResponse(t.render())
+        t = TemplateResponse(request, 'collection/push_commit.html')
+        return HttpResponse(t.render())
     # push collection
     elif post["operation"]=="push": 
         try:

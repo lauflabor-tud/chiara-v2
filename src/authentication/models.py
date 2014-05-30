@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
+from django.db import IntegrityError
 from utils.enums import Permission
 from chiara.settings.common import WEBDAV_DIR
 import os, shutil
@@ -162,10 +163,38 @@ class GroupPermission(models.Model):
                                   choices=Permission.CHOICES,
                                   default=Permission.READ)
     
+    @staticmethod
+    def update(collection):
+        """Update the permission to the given collection of all users who has permission
+        to the previous one."""
+        prev_col = collection.get_revision(collection.revision-1)
+        for prev_up in prev_col.grouppermission_set.all():
+            try:
+                gp = GroupPermission(collection=collection,
+                                     group=prev_up.group,
+                                     permission=prev_up.permission)
+                gp.save()
+            except IntegrityError:
+                pass
+    
+    def save_all_revisions(self):
+        """Set permission to all revisions of the collection."""
+        for c in self.collection.get_all_revisions():
+            try:
+                gp = GroupPermission(collection=c,
+                                     group=self.group,
+                                     permission=self.permission)
+                gp.save()
+            except IntegrityError:
+                pass
+            
     def __unicode__(self):
         return 'Group: %s | Collection ID: %d | Permission: %s' % (self.group, 
                                                                    self.collection.directory.identifier,
                                                                    self.permission)
+        
+    class Meta:
+        unique_together = (("collection", "group", "permission"),)
     
 
 
@@ -181,10 +210,37 @@ class UserPermission(models.Model):
                                   choices=Permission.CHOICES,
                                   default=Permission.READ)
     
+    @staticmethod
+    def update(collection):
+        """Update the permission to the given collection of all users who has permission
+        to the previous one."""
+        prev_col = collection.get_revision(collection.revision-1)
+        for prev_up in prev_col.userpermission_set.all():
+            try:
+                up = UserPermission(collection=collection,
+                                    user=prev_up.user,
+                                    permission=prev_up.permission)
+                up.save()
+            except IntegrityError:
+                pass
+    
+    def save_all_revisions(self):
+        """Set permission to all revisions of the collection."""
+        for c in self.collection.get_all_revisions():
+            try:
+                up = UserPermission(collection=c,
+                                    user=self.user,
+                                    permission=self.permission)
+                up.save()
+            except IntegrityError:
+                pass  
+    
     def __unicode__(self):
         return 'User: %s | Collection ID: %d | Permission: %s' % (self.user, 
                                                                   self.collection.directory.identifier,
                                                                   self.permission)
+    class Meta:
+        unique_together = (("collection", "user", "permission"),)
 
 
 class Subscription(models.Model):
@@ -210,4 +266,7 @@ class Subscription(models.Model):
             subscription.delete()
         
         super(Subscription, self).save()
+        
+    class Meta:
+        unique_together = (("collection", "user"),)
     
