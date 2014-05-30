@@ -52,7 +52,8 @@ def my_shared_folder(request, rel_path=''):
                              "id": collection.identifier,
                              "name": collection.directory.name, 
                              "size": utils.units.convert_data_size(dir_size), 
-                             "revision": collection.revision})
+                             "revision": collection.revision,
+                             "access": request.user.userpermission_set.get(collection=collection).permission})
             else:
                 d = webfolder.get_dir(request.user, rel_item_path)
                 dir_revision = d.revision if d else "-"
@@ -98,14 +99,17 @@ def operations(request):
             t = TemplateResponse(request, 'collection/push_commit.html')
             return HttpResponse(t.render())
     # push collection
-    elif post["operation"]=="push":
+    elif post["operation"]=="push": 
         try:
             prev_col = Collection.objects.get(identifier=post["dir_id"], revision=post["dir_revision"])
             collection = Collection()
             collection.push_local_revision(request.user, utils.path.url_decode(post["rel_dir_path"]), prev_col, post["comment"])
             message = "You have successfully pushed the local revision of '" + collection.directory.name + "' to the repository!"
         except NoLocalChangesException: 
-            message = "No local changes!"
+            message = "There are no local changes of this collection in your webfolder!"
+            error = True
+        except NotNewestRevisionException:
+            message = "You have to update to the newest revision of this collection before pushing a new one!"
             error = True
     # show revision view for pulling
     elif post["operation"]=="pull:choose_revision":

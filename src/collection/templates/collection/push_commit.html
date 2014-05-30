@@ -4,6 +4,14 @@
 
 {% block head_block %}
 	<link rel="stylesheet" type="text/css" href="{% static 'base/css/my_shared_folder.css' %}">
+	<script>
+       	function check_comment() {
+       		if(document.getElementById("comment").value.trim() == '') {
+			    document.getElementById("operation").value = "push:commit";
+			    alert("Please comment your local changes!");
+			}
+       	}
+    </script>
 {% endblock %}
 
 {% block title %} Push local revision {% endblock %}
@@ -23,10 +31,11 @@
   			<td class="description"> Comment: </td>
   		</tr>
   		<tr>
-  			<td><textarea class="comment" rows="4" cols="50" id="comment" name="comment"> </textarea></td>
+  			<td><textarea class="comment" rows="4" cols="50" id="comment" name="comment"></textarea></td>
   		</tr>
   		<tr>
-			<td><input class="push" name="operation" type="submit" value="push" /></td>
+			<td><button class="push" name="operation" id="operation" type="submit" value="push"
+				onClick="check_comment();">push</button></td>
   		</tr>
   		{# Extra parameters #}
   		<input name="rel_dir_path" type="hidden" value={{ request.POST|dict_get:"rel_dir_path" }} />

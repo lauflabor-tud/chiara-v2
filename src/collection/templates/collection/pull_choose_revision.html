@@ -25,10 +25,11 @@
 	  	<tr>
 	  		<td><select class="revision" name="revision">
   			{% for c in collections %}
-				<option value="{{ c.revision }}"> {{ c.revision }} </option>
+				<option value="{{ c.revision }}" selected> {{ c.revision }} </option>
 		  	{% endfor %}
 		  	</select>
-			<input class="button" name="operation" type="submit" value="pull" /></td>
+			<button name="operation" type="submit" value="pull" 
+				onClick="return confirm('Note that your local changes of this collection will be overwritten!')">update</button></td>
 	  	</tr>
   		<tr>
   			<td class="description"> Compendium: </td>

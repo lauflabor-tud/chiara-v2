@@ -1,10 +1,11 @@
 from django.db import models, IntegrityError
+from django.db.models import Max
 from django.core.exceptions import ObjectDoesNotExist
 import os, utils.path, utils.hash
 from authentication.models import UserPermission, Subscription
 from utils.enums import Permission
 from collection import info, webfolder
-from exception.exceptions import NoLocalChangesException
+from exception.exceptions import *
 
 import logging
 logger = logging.getLogger(__name__)
@@ -109,50 +110,58 @@ class Collection(models.Model):
     
     def push_local_revision(self, user, rel_path, prev_col, comment):
         """Push the local revision to the repository."""
-        # read description file
-        desc_parser = info.parse_description(user, rel_path)
         
-        # Create root directory and update it with the local revision
-        item = os.path.basename(rel_path)
-        root_dir = Directory(identifier=prev_col.directory.identifier,
-                             revision=prev_col.revision+1,
-                             name=item,
-                             user_modified=user,
-                             size=webfolder.get_dir_size(user, rel_path))
-        root_dir.save()
-        info.create_traits(user, rel_path, root_dir.identifier)
-        root_dir.push_recursive(user, rel_path, prev_col.directory)
+        prev_max_revision = Collection.objects.filter(identifier=prev_col.identifier).aggregate(Max('revision'))['revision__max']
         
-        if root_dir.hash == prev_col.directory.hash:
-            root_dir.delete()
-            raise NoLocalChangesException()
+        # collection is at newest revision
+        if prev_col.revision == prev_max_revision:
+            # read description file
+            desc_parser = info.parse_description(user, rel_path)
+            
+            # Create root directory and update it with the local revision
+            item = os.path.basename(rel_path)
+            root_dir = Directory(identifier=prev_col.directory.identifier,
+                                 revision=prev_col.revision+1,
+                                 name=item,
+                                 user_modified=user,
+                                 size=webfolder.get_dir_size(user, rel_path))
+            root_dir.save()
+            info.create_traits(user, rel_path, root_dir.identifier)
+            root_dir.push_recursive(user, rel_path, prev_col.directory)
+            
+            if root_dir.hash == prev_col.directory.hash:
+                root_dir.delete()
+                raise NoLocalChangesException()
+            else:
+                # Set collection attributes
+                self.identifier = prev_col.identifier
+                self.directory = root_dir
+                self.revision = prev_col.revision+1
+                self.save()
+                self.summary = desc_parser.get_summary()
+                self.details = desc_parser.get_details()
+                self.comment = comment
+                self.save()
+                for (key,value) in desc_parser.get_tags():
+                    tag = Tag(key=key, value=value)
+                    tag.save()
+                    self.tags.add(tag)
+            
+                # Set user access
+                permission = UserPermission(collection=self,
+                                            user=user,
+                                            permission=Permission.WRITE)
+                permission.save()
+                self.authors.add(user)
+                
+                # Set user subscription
+                subscription = Subscription(collection=self,
+                                            user=user)
+                subscription.save()
+        # collection is not at newest revision
         else:
-            # Set collection attributes
-            self.identifier = prev_col.identifier
-            self.directory = root_dir
-            self.revision = prev_col.revision+1
-            self.save()
-            self.summary = desc_parser.get_summary()
-            self.details = desc_parser.get_details()
-            self.comment = comment
-            self.save()
-            for (key,value) in desc_parser.get_tags():
-                tag = Tag(key=key, value=value)
-                tag.save()
-                self.tags.add(tag)
+            raise NotNewestRevisionException()
         
-            # Set user access
-            permission = UserPermission(collection=self,
-                                        user=user,
-                                        permission=Permission.WRITE)
-            permission.save()
-            self.authors.add(user)
-            
-            # Set user subscription
-            subscription = Subscription(collection=self,
-                                        user=user)
-            subscription.save()
-            
             
     def download(self, user, rel_path):
         """Download the collection into the given directory of the user's webfolder."""
@@ -224,7 +233,7 @@ class Directory(models.Model):
     user_modified = models.ForeignKey('authentication.User', 
                                       verbose_name=u'user who modified',
                                       related_name='directory_modified')
-    date_modified = models.DateField(verbose_name=u'last modified', auto_now_add=True)
+    date_modified = models.DateTimeField(verbose_name=u'last modified', auto_now_add=True)
      
     size = models.BigIntegerField(verbose_name=u'size')
  
@@ -410,11 +419,8 @@ class File(models.Model):
     user_modified = models.ForeignKey('authentication.User', 
                                       verbose_name=u'user who modified',
                                       related_name='file_modified')
-    date_created = models.DateField(verbose_name=u'creation date', 
-                                    auto_now_add=True, 
-                                    editable=False)
-    date_modified = models.DateField(verbose_name=u'last modified', auto_now_add=True)
-     
+    date_modified = models.DateTimeField(verbose_name=u'last modified', auto_now_add=True)
+    
     size = models.BigIntegerField(verbose_name=u'size')
     
     hash = models.CharField(verbose_name=u'hash', max_length=64)

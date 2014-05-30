@@ -46,8 +46,8 @@ table.content {
 }
 /* BUTTON */
 /* ====== */
-.button {
-  font: normal 12px Verdana, Arial, Helvetica;
+button {
+  font: normal 11px Verdana, Arial, Helvetica;
   text-decoration: none;
 }
 /* HEADBAR */

@@ -4,3 +4,6 @@ class MissingDescriptionFileException():
 
 class NoLocalChangesException():
     pass
+
+class NotNewestRevisionException():
+    pass

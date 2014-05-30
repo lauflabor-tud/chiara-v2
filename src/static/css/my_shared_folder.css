@@ -18,7 +18,7 @@ td.listdir-info {
   color: #807040;
 }
 select.listdir-action {
-  font: normal 12px Verdana, Arial, Helvetica;
+  font: normal 11px Verdana, Arial, Helvetica;
 }
 a.listdir-name {
   font: normal bold 12px Verdana, Arial, Helvetica;
@@ -41,12 +41,14 @@ a.listfile-name:hover {
 textarea.comment {
   margin-left: 20px;
 }
-input.push {
+button.push {
+  font: normal 11px Verdana, Arial, Helvetica;
   margin-left: 20px;
 }
 /* UPDATE TO REVISION */
 /* ================== */
 select.revision {
+  font: normal 11px Verdana, Arial, Helvetica;
   margin-left: 20px;
 }
 table.compendium {
@@ -69,4 +71,6 @@ td.compendium {
   color: #807040;
   border-top: 1px solid transparent;
   border-bottom: 1px solid #fff;
+  word-wrap: break-word;
+  max-width: 400px;
 }

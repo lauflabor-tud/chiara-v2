@@ -25,7 +25,7 @@ td.listdir-info {
 }
 
 select.listdir-action {
-	font: normal 12px @base_font_family;
+	font: normal 11px @base_font_family;
 }
 
 a.listdir-name {
@@ -56,7 +56,8 @@ textarea.comment {
 	margin-left: 20px;
 }
 
-input.push {
+button.push {
+	font: normal 11px @base_font_family;
 	margin-left: 20px;
 }
 
@@ -64,6 +65,7 @@ input.push {
 /* ================== */
 
 select.revision {
+	font: normal 11px @base_font_family;
 	margin-left: 20px;
 }
 
@@ -73,6 +75,7 @@ table.compendium {
 	margin-left: 20px;
     text-align: left;
 	border-collapse: collapse;
+	//table-layout: fixed
 }
 
 th.compendium {
@@ -89,4 +92,6 @@ td.compendium{
 	color: #807040;
 	border-top: 1px solid transparent;
 	border-bottom: 1px solid #fff;
+	word-wrap: break-word;
+	max-width:400px;
 }

@@ -4,11 +4,6 @@
 
 {% block head_block %}
 	<link rel="stylesheet" type="text/css" href="{% static 'base/css/my_shared_folder.css' %}">
-	<script>
-       	function show_msg(msg) {
-       		alert(msg);
-       	}
-    </script>
 {% endblock %}
 
 {% block title %} My shared folder {% endblock %}
@@ -49,11 +44,13 @@
 		<td class="listdir-info"><div> {{ d.id }} / {{ d.revision }} / {{ d.size }} </div></td>
 		<td> 
 		  <select class="listdir-action" name="operation">
-			<option value="push:commit">push local revision</option>
-			<option value="pull:choose_revision">update to revision</option>
+		  	{% if d.access == "W" %}
+				<option value="push:commit">push local revision</option>
+				<option value="pull:choose_revision">update to revision</option>
+			{% endif %}
 			<option value="unsubscribe">unsubscribe</option>
 		  </select>
-	 	  <input class="button" type="submit" value="OK" />
+	 	  <button type="submit" value="OK">OK</button>
 	 	  {# Extra parameters #}
 	 	  {% make_list rel_path d.name as rel_dir_path_list %}
 	 	  <input name="rel_dir_path" type="hidden" value={{ rel_dir_path_list|url_join|urlencode }} />
@@ -77,7 +74,7 @@
 				  <option value="add">add to collection</option>
 				  <option value="remove">remove from webfolder</option>
 				</select>
-				<input class="button" type="submit" value="OK" />
+				<button type="submit" value="OK">OK</button>
 		 	  	{# Extra parameters #}
 		 	  	{% make_list rel_path d.name as rel_dir_path_list %}
 				<input name="rel_dir_path" type="hidden" value={{ rel_dir_path_list|url_join|urlencode }} />
