@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.db import IntegrityError
-from utils.enums import Permission
+from utils import enum
 from chiara.settings.common import WEBDAV_DIR
 import os, shutil
 
@@ -160,8 +160,8 @@ class GroupPermission(models.Model):
     
     permission = models.CharField(verbose_name=u'permission',
                                   max_length=1,
-                                  choices=Permission.CHOICES,
-                                  default=Permission.READ)
+                                  choices=enum.Permission.CHOICES,
+                                  default=enum.Permission.READ)
     
     @staticmethod
     def update(collection):
@@ -207,8 +207,8 @@ class UserPermission(models.Model):
     
     permission = models.CharField(verbose_name=u'permission',
                                   max_length=1,
-                                  choices=Permission.CHOICES,
-                                  default=Permission.READ)
+                                  choices=enum.Permission.CHOICES,
+                                  default=enum.Permission.READ)
     
     @staticmethod
     def update(collection):

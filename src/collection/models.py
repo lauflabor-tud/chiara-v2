@@ -1,11 +1,14 @@
+from __future__ import division
 from django.db import models, IntegrityError
 from django.db.models import Max
 from django.core.exceptions import ObjectDoesNotExist
-import os, utils.path, utils.hash
+import os, utils.path, utils.hash, re, sys, datetime
 from authentication.models import UserPermission, GroupPermission, Subscription
-from utils.enums import Permission
+from utils import enum
+import utils
 from collection import info, webfolder
 from exception.exceptions import *
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -21,7 +24,7 @@ class Collection(models.Model):
     directory = models.OneToOneField('collection.Directory', 
                                      related_name='collection')
     
-    summary = models.TextField(verbose_name=u'summary', blank=True)
+    abstract = models.TextField(verbose_name=u'abstract', blank=True)
     details = models.TextField(verbose_name=u'details', blank=True)
     authors = models.ManyToManyField('authentication.User', 
                                      verbose_name=u'authors', 
@@ -39,9 +42,15 @@ class Collection(models.Model):
         return self.directory.name
     
     def get_revision(self, revision):
+        """Returns the collection with the given revision. If the revision greater than
+        the maximum revision than returns the maximum revision."""
+        max_revision = self.get_all_revisions().aggregate(Max('revision'))['revision__max']
+        if revision >= max_revision:
+            revision = max_revision
         return Collection.objects.get(identifier=self.identifier, revision=revision)
     
     def get_all_revisions(self):
+        """Returns a list of collection revisions."""
         return Collection.objects.filter(identifier=self.identifier)
     
     def get_file(self, path):
@@ -70,6 +79,60 @@ class Collection(models.Model):
                 return None
         return sub_dir
     
+    @staticmethod
+    def retrieve_collections(user, tags):
+        """Search the collections in the repository by filtering with the given tags 
+        and permissions of the user."""
+        # get all collections in newest revision which the user is permitted
+        permitted_collections = [c for c in user.permissions if c==c.get_revision(sys.maxint)]
+        # remove all subscribed collections
+        subsribed_collections = [c for c in user.subsribed 
+                                 if c.revision==c.get_all_revisions().aggregate(Max('revision'))['revision__max']]
+        collections = list(set(permitted_collections)-set(subsribed_collections))
+        # filter the collections with each of the given tags
+        for (key, value) in tags:
+            if value.strip()=="":
+                continue
+            values = value.split(" ")
+            if key==enum.Tag.TITLE:
+                collections = [c for c in collections 
+                               if 0.5 <= (len([v for v in values if re.search(v, c.directory.name)]) / len(values))]
+            elif key==enum.Tag.ABSTRACT:
+                collections = [c for c in collections 
+                               if 0.5 <= (len([v for v in values if re.search(v, c.abstract)]) / len(values))]
+            elif key==enum.Tag.AUTHOR:
+                collections = [c for c in collections for t in c.tags.filter(key=key)
+                               if 0.66 <= (len([v for v in values if re.search(v, t.value)]) / len(values))]
+            elif key==enum.Tag.TOPIC:
+                collections = [c for c in collections for t in c.tags.filter(key=key)
+                               if 0.5 <= (len([v for v in values if re.search(v, t.value)]) / len(values))]
+            elif key==enum.Tag.PROJECT:
+                collections = [c for c in collections for t in c.tags.filter(key=key)
+                               if 0.5 <= (len([v for v in values if re.search(v, t.value)]) / len(values))]
+            elif key==enum.Tag.CREATION_DATE_MIN:
+                collections = [c for c in collections for t in c.tags.filter(key=enum.Tag.CREATION_DATE)
+                               if utils.date.get_date(t.value) >= utils.date.get_date(value)]
+            elif key==enum.Tag.CREATION_DATE_MAX:
+                collections = [c for c in collections for t in c.tags.filter(key=enum.Tag.CREATION_DATE)
+                               if utils.date.get_date(t.value) <= utils.date.get_date(value)]
+            elif key==enum.Tag.PUBLISHING_DATE_MIN:
+                collections = [c for c in collections
+                               if c.get_revision(1).directory.date_modified >= utils.date.get_date(value)]
+            elif key==enum.Tag.PUBLISHING_DATE_MAX:
+                collections = [c for c in collections
+                               if c.get_revision(1).directory.date_modified <= utils.date.get_date(value)]
+            elif key==enum.Tag.LAST_MODIFICATION_DATE_MIN:
+                collections = [c for c in collections
+                               if c.get_revision(sys.maxint).directory.date_modified >= utils.date.get_date(value)]
+            elif key==enum.Tag.LAST_MODIFICATION_DATE_MAX:
+                collections = [c for c in collections
+                               if c.get_revision(sys.maxint).directory.date_modified <= utils.date.get_date(value)]
+            elif key==enum.Tag.KEYWORD:
+                collections = [c for c in collections for t in c.tags.filter(key=key)
+                               if 0.5 <= (len([v for v in values if re.search(v, t.value)]) / len(values))]
+        return collections
+                
+    
     def add_to_collection(self, user, rel_path):
         """Adds the given user directory to collection repository 
         with all subdirectories and files. Also sets the user permission
@@ -92,19 +155,22 @@ class Collection(models.Model):
         self.directory = root_dir
         self.revision = 1
         self.save()
-        self.summary = desc_parser.get_summary()
+        self.abstract = desc_parser.get_abstract()
         self.details = desc_parser.get_details()
         self.comment = "Add the collection to the repository."
         self.save()
         for (key,value) in desc_parser.get_tags():
-            tag = Tag(key=key, value=value)
-            tag.save()
+            try:
+                tag = Tag.objects.get(key=key, value=value)
+            except ObjectDoesNotExist:
+                tag = Tag(key=key, value=value)
+                tag.save()
             self.tags.add(tag)
     
         # Set user access
         permission = UserPermission(collection=self,
                                     user=user,
-                                    permission=Permission.WRITE)
+                                    permission=enum.Permission.WRITE)
         permission.save()
         self.authors.add(user)
         
@@ -144,13 +210,16 @@ class Collection(models.Model):
                 self.directory = root_dir
                 self.revision = prev_col.revision+1
                 self.save()
-                self.summary = desc_parser.get_summary()
+                self.abstract = desc_parser.get_abstract()
                 self.details = desc_parser.get_details()
                 self.comment = comment
                 self.save()
                 for (key,value) in desc_parser.get_tags():
-                    tag = Tag(key=key, value=value)
-                    tag.save()
+                    try:
+                        tag = Tag.objects.get(key=key, value=value)
+                    except ObjectDoesNotExist:
+                        tag = Tag(key=key, value=value)
+                        tag.save()
                     self.tags.add(tag)
             
                 # Set user access
@@ -473,13 +542,17 @@ class Tag(models.Model):
     """The Tag model contains a key-value pair to support the search
     process of a collection."""
     
-    key = models.CharField(verbose_name=u'Key', max_length=120)
-    value = models.CharField(verbose_name=u'Value', max_length=120)
+    key = models.CharField(verbose_name=u'Key',
+                           choices=enum.Tag.CHOICES_A,
+                           default=enum.Tag.TITLE,
+                           max_length=128)
+    value = models.CharField(verbose_name=u'Value', max_length=256)
      
     def __unicode__(self):
         return 'Key: %s | Value: %s' % (self.key, self.value)
     
     class Meta:
+        unique_together = (("key", "value"),)
         verbose_name = "tag"
         verbose_name_plural = "tags"
 

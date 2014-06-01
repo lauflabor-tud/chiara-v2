@@ -1,9 +1,14 @@
 
-class MissingDescriptionFileException():
+
+class MissingDescriptionFileException(Exception):
     pass
 
-class NoLocalChangesException():
+class NoLocalChangesException(Exception):
     pass
 
-class NotNewestRevisionException():
+class NotNewestRevisionException(Exception):
     pass
+
+class CannotParseStringToDateException(Exception):
+    def __init__(self, date):
+        self.date = date
