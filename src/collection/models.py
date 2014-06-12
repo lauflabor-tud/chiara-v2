@@ -26,10 +26,6 @@ class Collection(models.Model):
     
     abstract = models.TextField(verbose_name=u'abstract', blank=True)
     details = models.TextField(verbose_name=u'details', blank=True)
-    authors = models.ManyToManyField('authentication.User', 
-                                     verbose_name=u'authors', 
-                                     related_name='author_of', 
-                                     blank=True)
     comment = models.TextField(verbose_name=u'comment', blank=True)
     
     tags = models.ManyToManyField('collection.Tag', 
@@ -172,7 +168,6 @@ class Collection(models.Model):
                                     user=user,
                                     permission=enum.Permission.WRITE)
         permission.save()
-        self.authors.add(user)
         
         # Set user subscription
         subscription = Subscription(collection=self,
@@ -225,7 +220,6 @@ class Collection(models.Model):
                 # Set user access
                 UserPermission.update(self)
                 GroupPermission.update(self)
-                self.authors.add(user)
                 
                 # Set user subscription
                 subscription = Subscription(collection=self,

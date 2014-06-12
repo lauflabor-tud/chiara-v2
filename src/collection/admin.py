@@ -6,7 +6,7 @@ class CollectionAdmin(admin.ModelAdmin):
     """The CollectionAdmin is responsible for the look and feel of
     the collection admin window."""
     
-    filter_horizontal = ('authors', 'tags',)
+    filter_horizontal = ('tags',)
 
 
 
