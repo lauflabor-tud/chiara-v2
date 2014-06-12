@@ -9,9 +9,9 @@ def get_date(str_date):
         if len(date_values) == 3:
             date = datetime.date(date_values[2], date_values[1], date_values[0])
         elif len(date_values) == 2:
-            date = datetime.date(1, date_values[1], date_values[0])
+            date = datetime.date(date_values[1], date_values[0], 1)
         elif len(date_values) == 1:
-            date = datetime.date(1, 1, date_values[0])
+            date = datetime.date(date_values[0], 1, 1)
     except ValueError:
         raise CannotParseStringToDateException(str_date)
         
