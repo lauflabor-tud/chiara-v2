@@ -21,11 +21,15 @@ div.content-frame {
   width: 70%;
 }
 .info {
-  font: normal bold 12px Verdana, Arial, Helvetica;
+  font: normal 12px Verdana, Arial, Helvetica;
+}
+.note {
+  font: normal 12px Verdana, Arial, Helvetica;
+  padding-bottom: 10px;
 }
 .error {
-  font: normal bold 12px Verdana, Arial, Helvetica;
-  color: #cf2040;
+  font: normal 12px Verdana, Arial, Helvetica;
+  color: #e60000;
 }
 .description {
   padding-top: 10px;
@@ -34,9 +38,12 @@ div.content-frame {
 .normal_text {
   font: normal 12px Verdana, Arial, Helvetica;
 }
-.error {
-  font: normal bold 12px Verdana, Arial, Helvetica;
-  color: #e60000;
+hr.white_seperator {
+  height: 1px;
+  border: 0;
+  color: #ffffff;
+  background-color: #ffffff;
+  border-color: #ffffff;
 }
 table.content {
   margin-top: 10px;
@@ -49,6 +56,11 @@ table.content {
 button {
   font: normal 11px Verdana, Arial, Helvetica;
   text-decoration: none;
+}
+button.margin {
+  font: normal 11px Verdana, Arial, Helvetica;
+  text-decoration: none;
+  margin-left: 20px;
 }
 /* HEADBAR */
 /* ======= */

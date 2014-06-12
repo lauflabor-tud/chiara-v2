@@ -1,16 +1,19 @@
-from django.http import HttpResponse, Http404
-from django.template.response import TemplateResponse
+import logging
+import mimetypes
+import os, sys, utils.path, utils.units, urllib
+
 from django.contrib.auth.decorators import permission_required
 from django.core.servers.basehttp import FileWrapper
-from exception.exceptions import *
+from django.http import HttpResponse, Http404
+from django.template.response import TemplateResponse
 
-import os, utils.path, utils.units
-import mimetypes
-from collection.models import Collection
 from collection import webfolder
-
-import logging
+from collection.models import Collection
 from collection.webfolder import get_abs_path
+from exception.exceptions import *
+from utils import enum
+
+
 logger = logging.getLogger(__name__)
 
 def index(request):
@@ -80,7 +83,7 @@ def operations(request):
     if post["operation"]=="unsubscribe":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=post["dir_revision"])
         collection.unsubscribe(request.user)
-        message = "You have successfully unsubsribed the collection '" + collection.directory.name + "'!"
+        message = "You have successfully unsubsribed the collection '" + collection.name + "'!"
     # remove directory in webfolder
     elif post["operation"]=="remove":
         webfolder.remove_dir_recursive(request.user, utils.path.url_decode(post["rel_dir_path"]))
@@ -123,6 +126,20 @@ def operations(request):
         collection = Collection.objects.get(identifier=post["dir_id"], revision=post["revision"])
         collection.download(request.user, os.path.dirname(utils.path.left_slash(utils.path.url_decode(post["rel_dir_path"]))))
         message = "You have successfully updated the collection '" + collection.directory.name + "' to revision " + str(collection.revision) + "!"
+    # subscribe collection
+    elif post["operation"]=="subscribe":
+        logger.debug(post["dir_id"])
+        collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
+        collection = collection.get_revision(sys.maxint)
+        collection.subscribe(request.user)
+        message = "You have successfully subscribed the collection '"  + collection.name + "'!"
+    # subscribe and download collection
+    elif post["operation"]=="subscribe_download":
+        rel_path = utils.path.left_slash(utils.path.url_decode(post["rel_dir_path"]))
+        collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
+        collection = collection.get_revision(sys.maxint)
+        collection.download(request.user, rel_path)
+        message = "You have successfully subscribed the collection '"  + collection.name + "' and downloaded it into the directory '" + rel_path + "'!"
     else:
         pass
     
@@ -136,12 +153,56 @@ def operations(request):
 
 
 def retrieve_new_collections(request):
-    try:
-        collections = Collection.objects.all()
-    except Collection.DoesNotExist:
-        raise Http404
+    
+    post = request.POST
+    chosen_filters = []
+    collections = []
+    retrieve = False
+    error_msg = ""
+    
+    # click tab retrieve new collections
+    if not post:
+        chosen_filters = [(0, enum.Tag.TITLE, "")]
+        
+    # add filter
+    elif "add_filter" in post:
+        nr_filters = int(post["nr_filters"])
+        chosen_filters = []
+        for i in range(nr_filters):
+            chosen_filters.append((i, post["filter"+str(i)], post["query"+str(i)]))
+        chosen_filters.append((nr_filters, enum.Tag.TITLE, ""))    
+    
+    # remove filter
+    elif "remove_filter" in post:
+        nr = int(post["remove_filter"])
+        nr_filters = int(post["nr_filters"])
+        chosen_filters = []
+        for i in range(nr_filters):
+            if i < nr:
+                chosen_filters.append((i, post["filter"+str(i)], post["query"+str(i)]))
+            elif i > nr:
+                chosen_filters.append((i-1, post["filter"+str(i)], post["query"+str(i)]))
+    
+    # retrieve collections
+    elif "retrieve" in post:
+        try:
+            retrieve = True
+            nr_filters = int(post["nr_filters"])
+            chosen_filters = []
+            for i in range(nr_filters):
+                chosen_filters.append((i, post["filter"+str(i)], post["query"+str(i)]))
+            collections = Collection.retrieve_collections(request.user, [(k,v) for (_,k,v) in chosen_filters])
+        except CannotParseStringToDateException as exc:
+            error_msg = "Incorrect date: " + exc.date
+    else:
+        pass
+    
     t = TemplateResponse(request, 'collection/retrieve_new_collections.html', 
-                         {'collections': collections})
+                         {'filter_choices': [t for t in enum.Tag.CHOICES_B],
+                          'chosen_filters': chosen_filters,
+                          'collections': collections,
+                          'error_msg': error_msg,
+                          'retrieve': retrieve})
     return HttpResponse(t.render())
 
 

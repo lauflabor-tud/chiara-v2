@@ -1,4 +1,31 @@
 {% extends "base.html" %}
+{% load staticfiles %}
+{% load collection_filters %}
+
+{% block head_block %}
+	<link rel="stylesheet" type="text/css" href="{% static 'base/css/retrieve_new_collections.css' %}">
+	<script type="text/javascript">
+	<!--
+	function showHiddenInput(elem, cid){
+		{% for c in collections %}
+	   		if(elem.value == "subscribe_download" && {{ c.identifier }} == cid) {
+	      		document.getElementById("hidden_input{{ c.identifier }}").style.display = "block";
+	      	} 
+			if(elem.value != "subscribe_download" && {{ c.identifier }} == cid) {
+	      		document.getElementById("hidden_input{{ c.identifier }}").style.display = "none";
+	      	}
+	   	{% endfor %}
+	}
+	function confirmDownload(cid) {
+		var selectElem = document.getElementById(["select_option", cid].join(""));
+		var selectedValue = selectElem.options[selectElem.selectedIndex].value;
+		if(selectedValue == "subscribe_download") {
+			return confirm('Note that your local changes of this collection in the specified download path will be overwritten!');
+		}
+	}
+	//-->
+	</script>
+{% endblock %}
 
 {% block title %} Retrieve new collections {% endblock %}
 
@@ -7,5 +34,91 @@
 {% endblock %}
 
 {% block content %}
-<p class="info">Retrieve new collections ...</p>
+
+<table class="content">
+	<form action={% url 'retrieve_new_collections' %} method="post">{% csrf_token %}
+  		<tr>
+  			<td class="note"> You can search for collections by filtering with different tags. <br> It is also possible
+  			to combine some tags by clicking the [+]-Button. In this case, the chosen tags will be combined conjunctive. <br>
+  			Note that the dates must be written in Format: <i>dd.mm.yyyy<i>, <i>mm.yyyy<i> or <i>yyyy<i> </td>
+  		</tr>
+  		{% for chosen in chosen_filters %}
+	  		<tr>
+	  			<td>
+	  			<select class="listdir-action" name="filter{{chosen.0}}">
+	  				{% for choice in filter_choices %}
+	  					{% if choice.0 == chosen.1 %}
+	  						<option selected value={{ choice.0 }}> {{ choice.1 }} </option>
+	  					{% else %}
+	  						<option value={{ choice.0 }}> {{ choice.1 }} </option>
+	  					{% endif %}
+	  				{% endfor %}
+	  			</select>
+	  			<input name="query{{ chosen.0 }}" type="text" size="60" maxlength="60" value="{{ chosen.2 }}">
+	  			<button name="remove_filter" id="operation" type="submit" value="{{ chosen.0 }}">-</button>
+	  			</td>
+	  		</tr>
+  		{% endfor %}
+  		<tr>
+			<td>
+				<button name="add_filter" id="operation" type="submit" value="add_filter">+</button>
+				<button class="margin" name="retrieve" id="operation" type="submit" value="retrieve">search</button>
+			</td>
+  		</tr>
+  		{# Extra parameters #}
+  		<input name="nr_filters" type="hidden" value={{ chosen_filters|length }} />
+  	</form>
+  	
+  	{% if retrieve %}
+  		<tr>
+  			<td>
+			<hr class="white_seperator">  		
+  			{% if collections %}
+				<table class="search_results">
+	        		<tr>
+	        			<th class="search_results"> Title </th>
+	        			<th class="search_results"> Abstract </th>
+	        			<th class="search_results"> Topic </th>
+	        			<th class="search_results"> Author </th>
+	        			<th class="search_results"> Action </th>
+	        		</tr>
+	        		{% for c in collections %}
+	        			<form action={% url 'operations' %} method="post">{% csrf_token %}
+		        			<tr>
+		        				<td class="search_results"> {{ c.name }} </td>
+		        				<td class="search_results"> {{ c.abstract }} </td>
+		        				<td class="search_results"> 
+		        					{% for topic in c.topics %}
+		        						{{ topic }}{% if not forloop.last %},{% endif %}
+		        					{% endfor %} </td>
+		        				<td class="search_results"> 
+		        					{% for author in c.authors %}
+		        						{{ author }}{% if not forloop.last %},{% endif %}
+		        					{% endfor %} </td>
+		        				<td class="search_results"> 
+		        					<select id="select_option{{ c.identifier }}" class="listdir-action" name="operation" onchange="showHiddenInput(this, {{ c.identifier }})">
+										<option value="subscribe">subscribe</option>
+										<option value="subscribe_download">subscribe & download</option>
+				  					</select>
+				  					<button type="submit" value="OK" 
+				  						onClick="return confirmDownload({{ c.identifier }})">OK</button>
+				  					<input id="hidden_input{{ c.identifier }}" style="display: none;" name="rel_dir_path" type="text" 
+				  						size="30" maxlength="30" value="" placeholder="download path inside the webfolder">
+				  				</td>
+		    				</tr>
+		    				{# Extra parameters #}
+		    				<input name="dir_id" type="hidden" value={{ c.identifier }} />
+	    				</form>
+	    			{% endfor %}
+	    		</table>
+	  		{% elif error_msg != "" %}
+	  			<span class="error"> {{ error_msg }} </span>
+	  		{% else %}
+	  			<span class="info"> No results found! </span>
+	  		{% endif %}
+  			</td>
+  		</tr>
+  	{% endif %}
+</table>
+
 {% endblock %}

@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 import os, utils.path, utils.hash, re, sys, datetime
 from authentication.models import UserPermission, GroupPermission, Subscription
 from utils import enum
-import utils
+import utils.date
 from collection import info, webfolder
 from exception.exceptions import *
 
@@ -36,6 +36,14 @@ class Collection(models.Model):
     @property        
     def name(self):
         return self.directory.name
+    
+    @property
+    def authors(self):
+        return [t.value for t in self.tags.filter(key=enum.Tag.AUTHOR)]
+
+    @property
+    def topics(self):
+        return [t.value for t in self.tags.filter(key=enum.Tag.TOPIC)]
     
     def get_revision(self, revision):
         """Returns the collection with the given revision. If the revision greater than
@@ -80,9 +88,9 @@ class Collection(models.Model):
         """Search the collections in the repository by filtering with the given tags 
         and permissions of the user."""
         # get all collections in newest revision which the user is permitted
-        permitted_collections = [c for c in user.permissions if c==c.get_revision(sys.maxint)]
+        permitted_collections = [c for c in user.permissions.all() if c==c.get_revision(sys.maxint)]
         # remove all subscribed collections
-        subsribed_collections = [c for c in user.subsribed 
+        subsribed_collections = [c for c in user.subscriptions.all() 
                                  if c.revision==c.get_all_revisions().aggregate(Max('revision'))['revision__max']]
         collections = list(set(permitted_collections)-set(subsribed_collections))
         # filter the collections with each of the given tags
@@ -92,19 +100,19 @@ class Collection(models.Model):
             values = value.split(" ")
             if key==enum.Tag.TITLE:
                 collections = [c for c in collections 
-                               if 0.5 <= (len([v for v in values if re.search(v, c.directory.name)]) / len(values))]
+                               if 0.5 <= (len([v for v in values if re.search(v, c.directory.name, re.IGNORECASE)]) / len(values))]
             elif key==enum.Tag.ABSTRACT:
                 collections = [c for c in collections 
-                               if 0.5 <= (len([v for v in values if re.search(v, c.abstract)]) / len(values))]
+                               if 0.5 <= (len([v for v in values if re.search(v, c.abstract, re.IGNORECASE)]) / len(values))]
             elif key==enum.Tag.AUTHOR:
                 collections = [c for c in collections for t in c.tags.filter(key=key)
-                               if 0.66 <= (len([v for v in values if re.search(v, t.value)]) / len(values))]
+                               if 0.66 <= (len([v for v in values if re.search(v, t.value, re.IGNORECASE)]) / len(values))]
             elif key==enum.Tag.TOPIC:
                 collections = [c for c in collections for t in c.tags.filter(key=key)
-                               if 0.5 <= (len([v for v in values if re.search(v, t.value)]) / len(values))]
+                               if 0.5 <= (len([v for v in values if re.search(v, t.value, re.IGNORECASE)]) / len(values))]
             elif key==enum.Tag.PROJECT:
                 collections = [c for c in collections for t in c.tags.filter(key=key)
-                               if 0.5 <= (len([v for v in values if re.search(v, t.value)]) / len(values))]
+                               if 0.5 <= (len([v for v in values if re.search(v, t.value, re.IGNORECASE)]) / len(values))]
             elif key==enum.Tag.CREATION_DATE_MIN:
                 collections = [c for c in collections for t in c.tags.filter(key=enum.Tag.CREATION_DATE)
                                if utils.date.get_date(t.value) >= utils.date.get_date(value)]
@@ -125,7 +133,7 @@ class Collection(models.Model):
                                if c.get_revision(sys.maxint).directory.date_modified <= utils.date.get_date(value)]
             elif key==enum.Tag.KEYWORD:
                 collections = [c for c in collections for t in c.tags.filter(key=key)
-                               if 0.5 <= (len([v for v in values if re.search(v, t.value)]) / len(values))]
+                               if 0.5 <= (len([v for v in values if re.search(v, t.value, re.IGNORECASE)]) / len(values))]
         return collections
                 
     
@@ -250,6 +258,12 @@ class Collection(models.Model):
             subscription.delete()
         except ObjectDoesNotExist:
             pass
+
+    def subscribe(self, user):
+        """Subscribe the collection of the user."""
+        subscription = Subscription(collection=self,
+                                        user=user)
+        subscription.save()
 
 
     def save(self, *args, **kwargs):
