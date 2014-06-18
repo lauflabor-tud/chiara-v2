@@ -218,6 +218,7 @@ def manage_my_collections(request):
 
 
 def download_to_disk(request, rel_file_path):
+    rel_file_path = utils.path.url_decode(rel_file_path);
     abs_file_path = get_abs_path(request.user, rel_file_path)
     download_name =os.path.basename(abs_file_path)
     wrapper = FileWrapper(open(abs_file_path))
