@@ -140,6 +140,18 @@ def operations(request):
         collection = collection.get_revision(sys.maxint)
         collection.download(request.user, rel_path)
         message = "You have successfully subscribed the collection '"  + collection.name + "' and downloaded it into the directory '" + rel_path + "'!"
+    elif post["operation"]=="download":
+        rel_path = utils.path.left_slash(utils.path.url_decode(post["rel_dir_path"]))
+        collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
+        collection = collection.get_revision(sys.maxint)
+        collection.download(request.user, rel_path)
+        message = "You have successfully downloaded the collection '"  + collection.name + "' into the directory '" + rel_path + "'!"
+    elif post["operation"]=="permissions":
+        #rel_path = utils.path.left_slash(utils.path.url_decode(post["rel_dir_path"]))
+        #collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
+        #collection = collection.get_revision(sys.maxint)
+        #collection.download(request.user, rel_path)
+        message = "Permissions!"
     else:
         pass
     
@@ -209,11 +221,20 @@ def retrieve_new_collections(request):
 @permission_required('collection.manage_my_collections', login_url="/login/")
 def manage_my_collections(request):
     try:
-        collections = Collection.objects.all()
+        collections = request.user.subscriptions.all()
     except Collection.DoesNotExist:
         raise Http404
+    
+    cols = []
+    for c in collections:
+        cols.append({"id": c.identifier,
+                     "name": c.name, 
+                     "abstract": c.abstract, 
+                     "revision": c.revision,
+                     "access": c.get_user_permission(request.user)})
+                
     t = TemplateResponse(request, 'collection/manage_my_collections.html', 
-                         {'collections': collections})
+                         {'collections': cols})
     return HttpResponse(t.render())
 
 

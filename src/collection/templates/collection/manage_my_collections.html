@@ -1,4 +1,30 @@
 {% extends "base.html" %}
+{% load staticfiles %}
+{% load collection_filters %}
+
+{% block head_block %}
+	<script type="text/javascript">
+	<!--
+	function showHiddenInput(elem, cid){
+		{% for c in collections %}
+	   		if(elem.value == "download" && {{ c.id }} == cid) {
+	      		document.getElementById("hidden_input{{ c.id }}").style.display = "block";
+	      	} 
+			if(elem.value != "download" && {{ c.id }} == cid) {
+	      		document.getElementById("hidden_input{{ c.id }}").style.display = "none";
+	      	}
+	   	{% endfor %}
+	}
+	function confirmDownload(cid) {
+		var selectElem = document.getElementById(["select_option", cid].join(""));
+		var selectedValue = selectElem.options[selectElem.selectedIndex].value;
+		if(selectedValue == "download") {
+			return confirm('Note that your local changes of this collection in the specified download path will be overwritten!');
+		}
+	}
+	//-->
+	</script>
+{% endblock %}
 
 {% block title %} Manage my collections {% endblock %}
 
@@ -7,5 +33,45 @@
 {% endblock %}
 
 {% block content %}
-<p class="info">Manage my collections ...</p>
+
+<table class="content_frame">
+<table class="content_listing">
+  
+  {# Header #}
+  <tr>
+  	<th class="content_listing"> Subscribed collection </th>
+  	<th class="content_listing"> Abstract </th>
+  	<th class="content_listing"> Action </th>
+  </tr>
+
+  {% for c in collections %}
+  	{# List Collections #}
+  	<form action={% url 'operations'%} method="post">{% csrf_token %}
+  	  <tr>
+		<td class="content_listing"> {{ c.name }} </td>
+		<td class="content_listing"><div> {{ c.abstract }} </div></td>
+		<td class="content_listing">
+		  <select id="select_option{{ c.id }}" name="operation" onchange="showHiddenInput(this, {{ c.id }})">
+		  	{% if c.access == "W" %}
+				<option value="permissions">permissions</option>
+			{% endif %}
+			<option value="download">download</option>
+			<option value="unsubscribe">unsubscribe</option>
+		  </select>
+	 	  <button type="submit" value="OK" onClick="return confirmDownload({{ c.id }})">OK</button>
+	 	  <input id="hidden_input{{ c.id }}" style="display: none;" name="rel_dir_path" type="text" 
+			  size="30" maxlength="30" value="" placeholder="download path inside the webfolder">
+	 	  {# Extra parameters #}
+	 	  {#{% make_list rel_path d.name as rel_dir_path_list %}#}
+	 	  {#<input name="rel_dir_path" type="hidden" value={{ rel_dir_path_list|url_join|urlencode }} />#}
+		  <input name="dir_id" type="hidden" value={{ c.id }} />
+		  <input name="dir_revision" type="hidden" value={{ c.revision }} />
+		</td>
+	  </tr>
+	</form>
+  {% endfor %}
+ 
+</table>
+</table>
+
 {% endblock %}

@@ -83,6 +83,9 @@ class Collection(models.Model):
                 return None
         return sub_dir
     
+    def get_user_permission(self, user):
+        return user.userpermission_set.get(collection=self).permission
+    
     @staticmethod
     def retrieve_collections(user, tags):
         """Search the collections in the repository by filtering with the given tags 
