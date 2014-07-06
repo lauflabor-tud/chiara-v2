@@ -21,7 +21,7 @@
     </tr>
 
 	<table class="content_listing-fixed">
-	  
+	{% if dirs %}  
 	  {# Header #}
 	  <tr>
 	  	<th class="content_listing"> Name </th>
@@ -99,6 +99,10 @@
 			<td class="content_listing"> </td>
 	  	</tr>
 	  {% endfor %}
+	  
+	  {% else %}
+		<tr><td class="content_listing"> Webfolder is empty! </td></tr>
+	  {% endif %}
 	</table> 
 </table>
 {% endblock %}
