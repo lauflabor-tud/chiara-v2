@@ -3,7 +3,6 @@
 {% load collection_filters %}
 
 {% block head_block %}
-	<link rel="stylesheet" type="text/css" href="{% static 'base/css/retrieve_new_collections.css' %}">
 	<script type="text/javascript">
 	<!--
 	function showHiddenInput(elem, cid){
@@ -35,7 +34,7 @@
 
 {% block content %}
 
-<table class="content">
+<table class="content_frame">
 	<form action={% url 'retrieve_new_collections' %} method="post">{% csrf_token %}
   		<tr>
   			<td class="note"> You can search for collections by filtering with different tags. <br> It is also possible
@@ -74,29 +73,29 @@
   			<td>
 			<hr class="white_seperator">  		
   			{% if collections %}
-				<table class="search_results">
+				<table class="content_listing">
 	        		<tr>
-	        			<th class="search_results"> Title </th>
-	        			<th class="search_results"> Abstract </th>
-	        			<th class="search_results"> Topic </th>
-	        			<th class="search_results"> Author </th>
-	        			<th class="search_results"> Action </th>
+	        			<th class="content_listing"> Title </th>
+	        			<th class="content_listing"> Abstract </th>
+	        			<th class="content_listing"> Topic </th>
+	        			<th class="content_listing"> Author </th>
+	        			<th class="content_listing"> Action </th>
 	        		</tr>
 	        		{% for c in collections %}
 	        			<form action={% url 'operations' %} method="post">{% csrf_token %}
 		        			<tr>
-		        				<td class="search_results"> {{ c.name }} </td>
-		        				<td class="search_results"> {{ c.abstract }} </td>
-		        				<td class="search_results"> 
+		        				<td class="content_listing"> {{ c.name }} </td>
+		        				<td class="content_listing"> {{ c.abstract }} </td>
+		        				<td class="content_listing"> 
 		        					{% for topic in c.topics %}
 		        						{{ topic }}{% if not forloop.last %},{% endif %}
 		        					{% endfor %} </td>
-		        				<td class="search_results"> 
+		        				<td class="content_listing"> 
 		        					{% for author in c.authors %}
 		        						{{ author }}{% if not forloop.last %},{% endif %}
 		        					{% endfor %} </td>
-		        				<td class="search_results"> 
-		        					<select id="select_option{{ c.identifier }}" class="listdir-action" name="operation" onchange="showHiddenInput(this, {{ c.identifier }})">
+		        				<td class="content_listing"> 
+		        					<select id="select_option{{ c.identifier }}" name="operation" onchange="showHiddenInput(this, {{ c.identifier }})">
 										<option value="subscribe">subscribe</option>
 										<option value="subscribe_download">subscribe & download</option>
 				  					</select>

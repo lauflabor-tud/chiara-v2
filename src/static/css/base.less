@@ -24,12 +24,19 @@ img.chiara-logo {
 /* CONTENT */
 /* ======= */
 
-div.content-frame {
+div.content_frame {
 	display: block;
     margin-left: auto;
     margin-right: auto;
     margin-bottom: 20px;
     width: @content_width;
+}
+
+table.content_frame {
+	margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
 }
 
 .info {
@@ -62,14 +69,6 @@ hr.white_seperator {
 	background-color: rgb(255,255,255);
 	border-color: rgb(255,255,255);
 }
-
-table.content {
-	margin-top: 10px;
-    margin-left: auto;
-    margin-right: auto;
-    width: 100%;
-}
-
 
 /* BUTTON */
 /* ====== */
@@ -209,4 +208,49 @@ a.foottab-notselected {
 }
 a.foottab-notselected:hover {
 	color: rgb(138,138,138);
+}
+
+
+/* CONTENT TABLE */
+/* ============= */
+
+table.content_listing {
+	font: normal 12px @base_font_family;
+    margin-top:10px;
+	//margin-left: 20px;
+    text-align: left;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+table.content_listing-fixed {
+	font: normal 12px @base_font_family;
+    margin-top:10px;
+	//margin-left: 20px;
+    text-align: left;
+	border-collapse: collapse;
+	table-layout: fixed;
+	width: 100%;
+}
+
+th.content_listing {
+	font-weight: bold;
+	padding: 6px;
+	background: rgb(182,217,236);
+	border-top: 4px solid rgb(106,180,217);
+	border-bottom: 1px solid #fff;
+	color: #203080;
+}
+
+td.content_listing {
+	padding: 6px;
+	color: #807040;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid #fff;
+	word-wrap: break-word;
+	//max-width:400px;
+}
+
+select.listdir-action {
+	font: normal 11px @base_font_family;
 }
