@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load collection_filters %}
+
+{% block head_block %}
+	<link rel="stylesheet" type="text/css" href="{% static 'base/css/my_shared_folder.css' %}">
+{% endblock %}
+
+{% block title %} Manage permissions {% endblock %}
+
+{% block manage_tab %}
+<td class="tab"><a class="tab-selected" href={% url 'manage_my_collections' %}>Manage my collections</a></td>
+{% endblock %}
+
+{% block content %}
+
+<table class="content_frame">
+	<tr>
+  		<td class="description"> Collection: <span class="normal_text"> {{ collection.name }} </span></td>
+  	</tr>
+  	
+	{# GROUP ACCESS #}
+	{% if all_users %}
+  	<tr>
+  		<td class="description"> User access: </td>
+  	</tr>
+  	<tr><td>
+  	<table class="compendium">
+		<form action={% url 'operations' %} method="post">{% csrf_token %}
+	    	<tr>
+				<th class="compendium"> User </th>
+				<th class="compendium"> Access </th>
+				<th class="compendium"> Action </th>
+			</tr>
+	  		{% for up in userpermission_set %}
+			  	<tr>
+			  		<td class="compendium"> {{ up.user.user_name }} </td>
+			  		<td class="compendium"> {{ up.permission|get_readable_permission }} </td>
+			  		<td class="compendium"> 
+			  			<select name="operation">
+				  			{% if up.permission == "R" %}
+								<option value="user_write_access">grand write access</option>
+							{% endif %}
+				  			{% if up.permission == "W" %}
+								<option value="user_read_access">revoke write access</option>
+							{% endif %}
+							<option value="user_remove_access">remove</option>
+				  		</select>
+				  		<button type="submit" value="OK">OK</button>
+			  		</td>
+			  	</tr>
+			  	{# Extra parameters #}
+			  	<input name="dir_id" type="hidden" value={{ collection.identifier }} />
+			 	<input name="user_name" type="hidden" value={{ up.user.user_name }} />
+		  	{% endfor %}
+		  </form>
+	  
+		  <form action={% url 'operations' %} method="post">{% csrf_token %}
+		  	<tr>
+		  		<td class="compendium">
+		  			<select name="user_name">
+		  				{% for u in all_users %}
+		  					<option value={{u.user_name}}>{{ u.user_name }}</option>
+		  				{% endfor %}
+		  			</select>
+		  		</td>
+		  		<td class="compendium">
+		  			<select name="operation">
+		  				{% for choice in permission_choices %}
+		  					{% if choice == "R" %}
+								<option value="user_read_access"> {{ choice|get_readable_permission }} </option>
+							{% endif %}
+		  					{% if choice == "W" %}
+								<option value="user_write_access"> {{ choice|get_readable_permission }} </option>
+							{% endif %}
+		  				{% endfor %}
+		  			</select>
+		  		</td>
+		  		<td class="compendium">
+		  			<button type="submit" value="grant">grant</button>
+		  		</td>
+		  	</tr>
+		  	{# Extra parameters #}
+		  	<input name="dir_id" type="hidden" value={{ collection.identifier }} />
+		  </form>
+	</table>
+	</td></tr>
+	{% endif %}
+		
+	{# GROUP ACCESS #}
+	{% if all_groups %}
+  	<tr>
+  		<td class="description"> Group access: </td>
+  	</tr>
+  	<tr><td>
+  	<table class="compendium">
+		<form action={% url 'operations' %} method="post">{% csrf_token %}
+	    	<tr>
+				<th class="compendium"> Group </th>
+				<th class="compendium"> Access </th>
+				<th class="compendium"> Action </th>
+			</tr>
+	  		{% for gp in grouppermission_set %}
+			  	<tr>
+			  		<td class="compendium"> {{ gp.group.group_name }} </td>
+			  		<td class="compendium"> {{ gp.permission|get_readable_permission }} </td>
+			  		<td class="compendium"> 
+			  			<select name="operation">
+				  			{% if gp.permission == "R" %}
+								<option value="group_write_access">grand write access</option>
+							{% endif %}
+				  			{% if gp.permission == "W" %}
+								<option value="group_read_access">revoke write access</option>
+							{% endif %}
+							<option value="group_remove_access">remove</option>
+				  		</select>
+				  		<button type="submit" value="OK">OK</button>
+			  		</td>
+			  	</tr>
+			  	{# Extra parameters #}
+			  	<input name="dir_id" type="hidden" value={{ collection.identifier }} />
+			 	<input name="group_name" type="hidden" value={{ gp.group.group_name }} />
+		  	{% endfor %}
+		  </form>
+	  
+		  <form action={% url 'operations' %} method="post">{% csrf_token %}
+		  	<tr>
+		  		<td class="compendium">
+		  			<select name="group_name">
+		  				{% for g in all_groups %}
+		  					<option value={{g.group_name}}>{{ g.group_name }}</option>
+		  				{% endfor %}
+		  			</select>
+		  		</td>
+		  		<td class="compendium">
+		  			<select name="operation">
+		  				{% for choice in permission_choices %}
+		  					{% if choice == "R" %}
+								<option value="group_read_access"> {{ choice|get_readable_permission }} </option>
+							{% endif %}
+		  					{% if choice == "W" %}
+								<option value="group_write_access"> {{ choice|get_readable_permission }} </option>
+							{% endif %}
+		  				{% endfor %}
+		  			</select>
+		  		</td>
+		  		<td class="compendium">
+		  			<button type="submit" value="grant">grant</button>
+		  		</td>
+		  	</tr>
+		  	{# Extra parameters #}
+		  	<input name="dir_id" type="hidden" value={{ collection.identifier }} />
+		  </form>
+	</table>
+	</td></tr>
+	{% endif %}
+</table>
+{% endblock %}

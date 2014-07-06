@@ -1,5 +1,5 @@
 from django import template
-import os, urllib
+import os, urllib, utils.enum
 
 register = template.Library()
 
@@ -34,3 +34,9 @@ def urldecode(value):
 @register.filter
 def url_join(value):
     return os.path.join(*value)
+
+@register.filter
+def get_readable_permission(value):
+    for (k,v) in utils.enum.Permission.CHOICES:
+        if k==value:
+            return v

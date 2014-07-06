@@ -36,7 +36,7 @@
 
 <table class="content_frame">
 <table class="content_listing">
-  
+{% if collections %} 
   {# Header #}
   <tr>
   	<th class="content_listing"> Subscribed collection </th>
@@ -62,8 +62,6 @@
 	 	  <input id="hidden_input{{ c.id }}" style="display: none;" name="rel_dir_path" type="text" 
 			  size="30" maxlength="30" value="" placeholder="download path inside the webfolder">
 	 	  {# Extra parameters #}
-	 	  {#{% make_list rel_path d.name as rel_dir_path_list %}#}
-	 	  {#<input name="rel_dir_path" type="hidden" value={{ rel_dir_path_list|url_join|urlencode }} />#}
 		  <input name="dir_id" type="hidden" value={{ c.id }} />
 		  <input name="dir_revision" type="hidden" value={{ c.revision }} />
 		</td>
@@ -71,6 +69,9 @@
 	</form>
   {% endfor %}
  
+{% else %}
+	<tr><td class="content_listing"> No collections subscribed! </td></tr>
+{% endif %}
 </table>
 </table>
 

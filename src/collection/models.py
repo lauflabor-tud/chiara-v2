@@ -83,15 +83,12 @@ class Collection(models.Model):
                 return None
         return sub_dir
     
-    def get_user_permission(self, user):
-        return user.userpermission_set.get(collection=self).permission
-    
     @staticmethod
     def retrieve_collections(user, tags):
         """Search the collections in the repository by filtering with the given tags 
         and permissions of the user."""
         # get all collections in newest revision which the user is permitted
-        permitted_collections = [c for c in user.permissions.all() if c==c.get_revision(sys.maxint)]
+        permitted_collections = [c for c in user.get_all_permissible_collections() if c==c.get_revision(sys.maxint)]
         # remove all subscribed collections
         subsribed_collections = [c for c in user.subscriptions.all() 
                                  if c.revision==c.get_all_revisions().aggregate(Max('revision'))['revision__max']]

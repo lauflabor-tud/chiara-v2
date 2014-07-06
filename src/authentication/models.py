@@ -5,6 +5,8 @@ from utils import enum
 from chiara.settings.common import WEBDAV_DIR
 import os, shutil
 
+import logging
+logger = logging.getLogger(__name__)
 
 class UserManager(BaseUserManager):
     """Manager for the User model. It is responsible for creating users.
@@ -87,6 +89,22 @@ class User(AbstractBaseUser):
     def has_module_perms(self, app_label):
         """Does the user have permissions to view the app `app_label`?"""
         return True
+    
+    def get_permission(self, collection):
+        access = None
+        if self.userpermission_set.filter(collection=collection):
+            access = self.userpermission_set.get(collection=collection).permission
+        if access != enum.Permission.WRITE:
+            for group in self.groups.all():
+                if group.grouppermission_set.filter(collection=collection):
+                    if group.grouppermission_set.get(collection=collection).permission == enum.Permission.WRITE:
+                        return enum.Permission.WRITE
+        
+        return access
+    
+    def get_all_permissible_collections(self):
+        """Return all permissible collections (inclusive all permissions of belonging groups)."""
+        return list(set([c for g in self.groups.all() for c in g.permissions.all()] + list(self.permissions.all())))
 
     @property
     def is_staff(self):
@@ -181,20 +199,47 @@ class GroupPermission(models.Model):
         """Set permission to all revisions of the collection."""
         for c in self.collection.get_all_revisions():
             try:
-                gp = GroupPermission(collection=c,
-                                     group=self.group,
-                                     permission=self.permission)
+                if GroupPermission.objects.filter(group=self.group, collection=c):
+                    gp = GroupPermission.objects.get(group=self.group, collection=c)
+                    gp.permission = self.permission
+                else:
+                    gp = GroupPermission(collection=c,
+                                         group=self.group,
+                                         permission=self.permission)
                 gp.save()
             except IntegrityError:
+                pass 
+    
+    def delete_all_revisions(self):
+        """Delete permissions of all revisions of the collection."""
+        # Delete permission
+        for c in self.collection.get_all_revisions():
+            try:
+                if GroupPermission.objects.filter(group=self.group, collection=c):
+                    gp = GroupPermission.objects.get(group=self.group, collection=c)
+                    gp.delete()
+            except IntegrityError:
                 pass
-            
+
+        self.delete()
+        # Delete subscription
+        for c in self.collection.get_all_revisions():
+            try:
+                for u in c.users_who_subscribed.all():
+                    if c not in u.get_all_permissible_collections() and Subscription.objects.filter(user=u, collection=c):
+                        subscription = Subscription.objects.get(user=u, collection=c)
+                        subscription.delete()
+            except IntegrityError:
+                pass
+        
+
     def __unicode__(self):
         return 'Group: %s | Collection ID: %d | Permission: %s' % (self.group, 
                                                                    self.collection.directory.identifier,
                                                                    self.permission)
         
     class Meta:
-        unique_together = (("collection", "group", "permission"),)
+        unique_together = (("collection", "group"),)
     
 
 
@@ -228,19 +273,44 @@ class UserPermission(models.Model):
         """Set permission to all revisions of the collection."""
         for c in self.collection.get_all_revisions():
             try:
-                up = UserPermission(collection=c,
+                if UserPermission.objects.filter(user=self.user, collection=c):
+                    up = UserPermission.objects.get(user=self.user, collection=c)
+                    up.permission = self.permission
+                else:
+                    up = UserPermission(collection=c,
                                     user=self.user,
                                     permission=self.permission)
                 up.save()
             except IntegrityError:
                 pass  
     
+    def delete_all_revisions(self):
+        """Delete permissions of all revisions of the collection."""
+        # Delete permission
+        for c in self.collection.get_all_revisions():
+            try:
+                if UserPermission.objects.filter(user=self.user, collection=c):
+                    up = UserPermission.objects.get(user=self.user, collection=c)
+                    up.delete()
+            except IntegrityError:
+                pass
+        self.delete()
+        # Delete subscription
+        for c in self.collection.get_all_revisions():
+            try:
+                if Subscription.objects.filter(user=self.user, collection=c):
+                    subscription = Subscription.objects.get(user=self.user, collection=c)
+                    subscription.delete()
+            except IntegrityError:
+                pass
+
+    
     def __unicode__(self):
         return 'User: %s | Collection ID: %d | Permission: %s' % (self.user, 
                                                                   self.collection.directory.identifier,
                                                                   self.permission)
     class Meta:
-        unique_together = (("collection", "user", "permission"),)
+        unique_together = (("collection", "user"),)
 
 
 class Subscription(models.Model):

@@ -3,8 +3,8 @@ class Permission:
 	WRITE = 'W'
 	
 	CHOICES = (
-		(READ, 'read'),
-		(WRITE, 'write')
+		(READ, 'read only'),
+		(WRITE, 'read / write')
 	)
 	
 class Tag:
