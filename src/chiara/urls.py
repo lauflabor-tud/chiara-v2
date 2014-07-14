@@ -18,7 +18,7 @@ urlpatterns = patterns('',
     url(r'^logout/$', 'authentication.views.logout', name='logout'),
     
     # News
-    url(r'^news/', 'collection.views.news', name='news'),
+    url(r'^news/', 'log.views.news', name='news'),
     
     # My shared folder
     url(r'^shared-folder/$', 'collection.views.my_shared_folder', name='my_shared_folder'),

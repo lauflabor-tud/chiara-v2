@@ -4,7 +4,9 @@ from django.db.models import Max
 from django.core.exceptions import ObjectDoesNotExist
 import os, utils.path, utils.hash, re, sys, datetime
 from authentication.models import UserPermission, GroupPermission, Subscription
+from log.models import News
 from utils import enum
+from utils.current_user import get_current_user
 import utils.date
 from collection import info, webfolder
 from exception.exceptions import *
@@ -181,6 +183,13 @@ class Collection(models.Model):
         subscription = Subscription(collection=self,
                                     user=user)
         subscription.save()
+        
+        # Update news log
+        content =   "A new collection '" + self.name + "' was added to the repository.\n" + \
+                    "Abstract:\n" + self.abstract
+        news = News(content=content,
+                    collection=self)
+        news.save()
 
     
     def push_local_revision(self, user, rel_path, prev_col, comment):
@@ -233,6 +242,13 @@ class Collection(models.Model):
                 subscription = Subscription(collection=self,
                                             user=user)
                 subscription.save()
+                
+                # Update news log
+                content =   "The collection '" + self.name + "' was updated to revision " + \
+                            str(self.revision) + ".\n" + "Comment:\n" + self.comment
+                news = News(content=content,
+                            collection=self)
+                news.save()
         # collection is not at newest revision
         else:
             raise NotNewestRevisionException()
@@ -258,7 +274,8 @@ class Collection(models.Model):
             subscription.delete()
         except ObjectDoesNotExist:
             pass
-
+        
+        
     def subscribe(self, user):
         """Subscribe the collection of the user."""
         subscription = Subscription(collection=self,
@@ -278,6 +295,13 @@ class Collection(models.Model):
         else:
             p = UserPermission.objects.get(user=user, collection=self)
             p.delete_all_revisions()
+            
+        # Update news log
+        content =   "The user permissions of collection '" + self.name + "' were changed.\n" + \
+                    "The User '" + user.user_name + "' has " + utils.enum.Permission.get_readable_permission(permission) + " access."
+        news = News(content=content,
+                    collection=self)
+        news.save()
 
 
     def update_group_permission(self, group, permission):
@@ -293,6 +317,13 @@ class Collection(models.Model):
             permission = GroupPermission.objects.get(group=group, collection=self)
             permission.delete_all_revisions()
 
+        # Update news log
+        content =   "The group permissions of collection '" + self.name + "' were changed.\n" + \
+                    "The Group '" + group.group_name + "' has " + utils.enum.Permission.get_readable_permission(permission) + " access."
+        news = News(content=content,
+                    collection=self)
+        news.save()
+        
 
     def save(self, *args, **kwargs):
         """Find id before initial a directory and check required fields."""

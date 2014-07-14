@@ -7,6 +7,15 @@ class Permission:
 		(WRITE, 'read / write')
 	)
 	
+	@staticmethod
+	def get_readable_permission(permission):
+		if permission==None:
+			return "no"
+		elif permission==Permission.READ:
+			return "read only"
+		elif permission==Permission.WRITE:
+			return "read/write"
+	
 class Tag:
 	TITLE = "title"
 	ABSTRACT = "abstract"

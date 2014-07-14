@@ -1,7 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.db import IntegrityError
+from log.models import News
 from utils import enum
+from utils.current_user import get_current_user
 from chiara.settings.common import WEBDAV_DIR
 import os, shutil
 
@@ -121,6 +123,11 @@ class User(AbstractBaseUser):
         webdav_path = os.path.join(WEBDAV_DIR, self.user_name)
         if not os.path.exists(webdav_path):
             os.makedirs(webdav_path)
+            
+        # Update news log
+        content =   "A new user '" + self.user_name + "' has joined chiara."
+        news = News(content=content)
+        news.save()
     
     def delete(self, using=None):
         super(AbstractBaseUser, self).delete(using=using)       
@@ -163,6 +170,22 @@ class Membership(models.Model):
     
     user = models.ForeignKey('authentication.User')
     group = models.ForeignKey('authentication.Group')
+    
+    def save(self, *args, **kwargs):
+        # Update news log
+        content =   "The user '" + self.user.user_name + "' has joined the group '" + self.group.group_name + "'."
+        news = News(content=content,
+                    group=self.group)
+        news.save()        
+        super(Membership, self).save(*args, **kwargs)
+        
+    def delete(self, *args, **kwargs):
+        # Update news log
+        content =   "The user '" + self.user.user_name + "' has left the group '" + self.group.group_name + "'."
+        news = News(content=content,
+                    group=self.group)
+        news.save()        
+        super(Membership,self).delete(*args, **kwargs)
     
     def __unicode__(self):
         return 'User: %s | Group: %s' % (self.user, self.group) 

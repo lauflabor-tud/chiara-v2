@@ -12,23 +12,13 @@ from collection.models import Collection
 from collection.webfolder import get_abs_path
 from authentication.models import User, UserPermission, Group, GroupPermission
 from exception.exceptions import *
-from utils import enum
+from utils import enum 
 
 
 logger = logging.getLogger(__name__)
 
 def index(request):
     t = TemplateResponse(request, 'base.html', {})
-    return HttpResponse(t.render())
-
-
-def news(request):
-    try:
-        collections = Collection.objects.all()
-    except Collection.DoesNotExist:
-        raise Http404
-    t = TemplateResponse(request, 'collection/news.html', 
-                         {'collections': collections})
     return HttpResponse(t.render())
 
 

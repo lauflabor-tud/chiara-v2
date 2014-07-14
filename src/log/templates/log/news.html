@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %} News {% endblock %}
+
+{% block news_tab %}
+<td class="tab"><a class="tab-selected" href={% url 'news' %}>News</a></td>
+{% endblock %}
+
+{% block content %}
+
+<table class="content_frame">
+<form action={% url 'news' %} method="post">{% csrf_token %}
+	<tr>
+		<td><span class="description"> Filter: </span>
+			<select name="date_filter">
+				<option {% if date_filter == 10 %} selected {% endif %} value="10">10 days</option>
+				<option {% if date_filter == 30 %} selected {% endif %} value="30">30 days</option>
+				<option {% if date_filter == 90 %} selected {% endif %} value="90">90 days</option>
+				<option {% if date_filter == 180 %} selected {% endif %} value="180">180 days</option>
+			</select>
+			<button type="submit" value="OK">OK</button> 
+		</td>
+	</tr>
+</form>
+
+<table class="content_listing">
+{% if news %} 
+
+  {# Header #}
+  <tr>
+  	<th class="content_listing"> Date </th>
+  	<th class="content_listing"> User </th>
+  	<th class="content_listing"> Action </th>
+  </tr>
+
+  {% for n in news %}
+  	{# List Collections #}
+  	<form action={% url 'operations'%} method="post">{% csrf_token %}
+  	  <tr>
+		<td class="content_listing"> {{ n.date }} </td>
+		<td class="content_listing"> {{ user }} </td>
+		<td class="content_listing"> {{ n.content }} </td>
+	  </tr>
+	</form>
+  {% endfor %}
+ 
+{% else %}
+	<tr><td class="content_listing"> There are no news! </td></tr>
+{% endif %}
+</table>
+</table>
+
+
+{% endblock %}
