@@ -266,6 +266,34 @@ class Collection(models.Model):
         subscription.save()
 
 
+    def update_user_permission(self, user, permission):
+        """Grant the given user the given permission of this collection."""
+        if permission:
+            if UserPermission.objects.filter(user=user, collection=self):
+                p = UserPermission.objects.get(user=user, collection=self)
+                p.permission = permission
+            else:
+                p = UserPermission(user=user, collection=self, permission=permission)
+            p.save_all_revisions()
+        else:
+            p = UserPermission.objects.get(user=user, collection=self)
+            p.delete_all_revisions()
+
+
+    def update_group_permission(self, group, permission):
+        """Grant the given group the given permission of this collection."""
+        if permission:
+            if GroupPermission.objects.filter(group=group, collection=self):
+                p = GroupPermission.objects.get(group=group, collection=self)
+                p.permission = permission
+            else:
+                p = GroupPermission(group=group, collection=self, permission=permission)
+            p.save_all_revisions()
+        else:
+            permission = GroupPermission.objects.get(group=group, collection=self)
+            permission.delete_all_revisions()
+
+
     def save(self, *args, **kwargs):
         """Find id before initial a directory and check required fields."""
         # initial collection

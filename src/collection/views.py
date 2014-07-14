@@ -160,12 +160,7 @@ def operations(request):
     elif post["operation"]=="user_read_access":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         user = User.objects.get(user_name=post["user_name"])
-        if UserPermission.objects.filter(user=user, collection=collection):
-            permission = UserPermission.objects.get(user=user, collection=collection)
-            permission.permission = utils.enum.Permission.READ
-        else:
-            permission = UserPermission(user=user, collection=collection, permission=utils.enum.Permission.READ)
-        permission.save_all_revisions()
+        collection.update_user_permission(user, utils.enum.Permission.READ)
         t = TemplateResponse(request, 'collection/manage_permissions.html',
                              {'collection': collection,
                               'userpermission_set': collection.userpermission_set.all(),
@@ -177,13 +172,7 @@ def operations(request):
     elif post["operation"]=="user_write_access":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         user = User.objects.get(user_name=post["user_name"])
-        if UserPermission.objects.filter(user=user, collection=collection):
-            permission = UserPermission.objects.get(user=user, collection=collection)
-            permission.permission = utils.enum.Permission.WRITE
-        else:
-            permission = UserPermission(user=user, collection=collection, permission=utils.enum.Permission.WRITE)
-            
-        permission.save_all_revisions()
+        collection.update_user_permission(user, utils.enum.Permission.WRITE)
         t = TemplateResponse(request, 'collection/manage_permissions.html',
                              {'collection': collection,
                               'userpermission_set': collection.userpermission_set.all(),
@@ -195,8 +184,7 @@ def operations(request):
     elif post["operation"]=="user_remove_access":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         user = User.objects.get(user_name=post["user_name"])
-        permission = UserPermission.objects.get(user=user, collection=collection)
-        permission.delete_all_revisions()
+        collection.update_user_permission(user, None)
         t = TemplateResponse(request, 'collection/manage_permissions.html',
                              {'collection': collection,
                               'userpermission_set': collection.userpermission_set.all(),
@@ -208,12 +196,7 @@ def operations(request):
     elif post["operation"]=="group_read_access":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         group = Group.objects.get(group_name=post["group_name"])
-        if GroupPermission.objects.filter(group=group, collection=collection):
-            permission = GroupPermission.objects.get(group=group, collection=collection)
-            permission.permission = utils.enum.Permission.READ
-        else:
-            permission = GroupPermission(group=group, collection=collection, permission=utils.enum.Permission.READ)
-        permission.save_all_revisions()
+        collection.update_group_permission(group, utils.enum.Permission.READ)
         t = TemplateResponse(request, 'collection/manage_permissions.html',
                              {'collection': collection,
                               'userpermission_set': collection.userpermission_set.all(),
@@ -225,13 +208,7 @@ def operations(request):
     elif post["operation"]=="group_write_access":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         group = Group.objects.get(group_name=post["group_name"])
-        if GroupPermission.objects.filter(group=group, collection=collection):
-            permission = GroupPermission.objects.get(group=group, collection=collection)
-            permission.permission = utils.enum.Permission.WRITE
-        else:
-            permission = GroupPermission(group=group, collection=collection, permission=utils.enum.Permission.WRITE)
-            
-        permission.save_all_revisions()
+        collection.update_group_permission(group, utils.enum.Permission.WRITE)
         t = TemplateResponse(request, 'collection/manage_permissions.html',
                              {'collection': collection,
                               'userpermission_set': collection.userpermission_set.all(),
@@ -243,8 +220,7 @@ def operations(request):
     elif post["operation"]=="group_remove_access":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         group = Group.objects.get(group_name=post["group_name"])
-        permission = GroupPermission.objects.get(group=group, collection=collection)
-        permission.delete_all_revisions()
+        collection.update_group_permission(group, None)
         t = TemplateResponse(request, 'collection/manage_permissions.html',
                              {'collection': collection,
                               'userpermission_set': collection.userpermission_set.all(),
