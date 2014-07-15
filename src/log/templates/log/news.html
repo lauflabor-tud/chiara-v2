@@ -38,7 +38,7 @@
   	<form action={% url 'operations'%} method="post">{% csrf_token %}
   	  <tr>
 		<td class="content_listing"> {{ n.date }} </td>
-		<td class="content_listing"> {{ user }} </td>
+		<td class="content_listing"> {{ n.user }} </td>
 		<td class="content_listing"> {{ n.content }} </td>
 	  </tr>
 	</form>

@@ -299,7 +299,8 @@ class Collection(models.Model):
         # Update news log
         content =   "The user permissions of collection '" + self.name + "' were changed.\n" + \
                     "The User '" + user.user_name + "' has " + utils.enum.Permission.get_readable_permission(permission) + " access."
-        news = News(content=content,
+        news = News(user=User.get_current_user(),
+                    content=content,
                     collection=self)
         news.save()
 
@@ -320,7 +321,8 @@ class Collection(models.Model):
         # Update news log
         content =   "The group permissions of collection '" + self.name + "' were changed.\n" + \
                     "The Group '" + group.group_name + "' has " + utils.enum.Permission.get_readable_permission(permission) + " access."
-        news = News(content=content,
+        news = News(user=User.get_current_user(),
+                    content=content,
                     collection=self)
         news.save()
         

@@ -1,5 +1,4 @@
 from django.db import models
-from utils.current_user import get_current_user
 
 class News(models.Model):
     """The News model contains all news messages."""
@@ -19,11 +18,6 @@ class News(models.Model):
                               related_name='news_log',
                               blank=True,
                               null=True)
-    
-    def save(self, *args, **kwargs):
-        """Get current user before saving news."""
-        self.user = get_current_user()
-        super(News, self).save(*args, **kwargs)
 
     def __unicode__(self):
         return 'Date: %s | User: %s | Content: %s' % (self.date, self.user.user_name, self.content)

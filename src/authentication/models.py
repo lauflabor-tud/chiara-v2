@@ -1,14 +1,36 @@
+from threading import local
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.db import IntegrityError
 from log.models import News
 from utils import enum
-from utils.current_user import get_current_user
 from chiara.settings.common import WEBDAV_DIR
+from chiara.settings.local import CODE_ADMIN
 import os, shutil
 
 import logging
 logger = logging.getLogger(__name__)
+
+_current = local()
+
+def create_new_user_extras(user):
+    # create WebDAV directory
+    webdav_path = os.path.join(WEBDAV_DIR, user.user_name)
+    if not os.path.exists(webdav_path):
+        os.makedirs(webdav_path)
+        
+    # Update news log
+    content =   "A new user '" + user.user_name + "' has joined chiara."
+    news = News(user=User.get_current_user(), content=content)
+    news.save()
+
+
+    
+class CurrentUserMiddleware(object):
+    def process_request(self, request):
+        _current.user = request.user
+
+
 
 class UserManager(BaseUserManager):
     """Manager for the User model. It is responsible for creating users.
@@ -31,9 +53,11 @@ class UserManager(BaseUserManager):
                           last_name=last_name,
                           email=email,
         )
-
+    
         user.set_password(password)
         user.save(using=self._db)
+        create_new_user_extras(user)
+    
         return user
 
     def create_superuser(self, user_name, first_name, last_name, email, password):
@@ -47,6 +71,8 @@ class UserManager(BaseUserManager):
         
         user.is_admin = True
         user.save(using=self._db)
+        create_new_user_extras(user)
+    
         return user
 
 
@@ -77,6 +103,13 @@ class User(AbstractBaseUser):
 
     USERNAME_FIELD = 'user_name'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'email']
+    
+    @staticmethod
+    def get_current_user():
+        try:
+            return User.objects.get(user_name=_current.user.user_name)
+        except BaseException:
+            return User.objects.get(user_name=CODE_ADMIN)
 
     def get_full_name(self):
         return self.user_name
@@ -118,17 +151,8 @@ class User(AbstractBaseUser):
     
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         super(AbstractBaseUser, self).save(force_insert=force_insert, force_update=force_update, 
-                                       using=using, update_fields=update_fields)
-        # create WebDAV directory
-        webdav_path = os.path.join(WEBDAV_DIR, self.user_name)
-        if not os.path.exists(webdav_path):
-            os.makedirs(webdav_path)
-            
-        # Update news log
-        content =   "A new user '" + self.user_name + "' has joined chiara."
-        news = News(content=content)
-        news.save()
-    
+                                       using=using, update_fields=update_fields)   
+        
     def delete(self, using=None):
         super(AbstractBaseUser, self).delete(using=using)       
         # remove WebDAV directory
@@ -174,7 +198,8 @@ class Membership(models.Model):
     def save(self, *args, **kwargs):
         # Update news log
         content =   "The user '" + self.user.user_name + "' has joined the group '" + self.group.group_name + "'."
-        news = News(content=content,
+        news = News(user=User.get_current_user(),
+                    content=content,
                     group=self.group)
         news.save()        
         super(Membership, self).save(*args, **kwargs)
@@ -182,7 +207,8 @@ class Membership(models.Model):
     def delete(self, *args, **kwargs):
         # Update news log
         content =   "The user '" + self.user.user_name + "' has left the group '" + self.group.group_name + "'."
-        news = News(content=content,
+        news = News(user=User.get_current_user(),
+                    content=content,
                     group=self.group)
         news.save()        
         super(Membership,self).delete(*args, **kwargs)

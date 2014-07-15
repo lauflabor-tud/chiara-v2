@@ -1,10 +1,13 @@
+import logging
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from authentication.models import User, Group, Membership, UserPermission, GroupPermission, Subscription
+from authentication import models
 
+logger = logging.getLogger(__name__)
 
 class MembershipInline(admin.TabularInline):
     """The MembershipInline is necessary to combine User
@@ -68,6 +71,7 @@ class UserCreationForm(forms.ModelForm):
         user.set_password(self.cleaned_data["password1"])
         if commit:
             user.save()
+        models.create_new_user_extras(user)
         return user
 
 
