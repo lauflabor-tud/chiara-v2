@@ -20,11 +20,11 @@ def news(request):
         last_date = timezone.now()-timedelta(days=date_filter)
         
         if request.user.is_anonymous():
-            news = [n for n in News.objects.all() 
+            news = [n for n in News.objects.order_by("-date")
                     if (n.collection!=None and n.collection.public_access) # user news (public collection)
                     and (n.date>=last_date)]
         else:
-            news = [n for n in News.objects.all() 
+            news = [n for n in News.objects.order_by("-date")
                     if ((n.collection==None and n.group==None) # general news
                     or  (n.collection!=None and n.collection.public_access) # user news (public collection)
                     or  (n.collection!=None and n.collection in request.user.permissions.all()) # user news (collection)
