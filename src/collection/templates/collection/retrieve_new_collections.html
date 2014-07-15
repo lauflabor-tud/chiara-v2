@@ -18,7 +18,7 @@
 	function confirmDownload(cid) {
 		var selectElem = document.getElementById(["select_option", cid].join(""));
 		var selectedValue = selectElem.options[selectElem.selectedIndex].value;
-		if(selectedValue == "subscribe_download") {
+		if(selectedValue == "subscribe_download" || selectedValue == "download") {
 			return confirm('Note that your local changes of this collection in the specified download path will be overwritten!');
 		}
 	}
@@ -94,15 +94,25 @@
 		        					{% for author in c.authors %}
 		        						{{ author }}{% if not forloop.last %},{% endif %}
 		        					{% endfor %} </td>
-		        				<td class="content_listing"> 
-		        					<select id="select_option{{ c.identifier }}" name="operation" onchange="showHiddenInput(this, {{ c.identifier }})">
-										<option value="subscribe">subscribe</option>
-										<option value="subscribe_download">subscribe & download</option>
-				  					</select>
-				  					<button type="submit" value="OK" 
-				  						onClick="return confirmDownload({{ c.identifier }})">OK</button>
-				  					<input id="hidden_input{{ c.identifier }}" style="display: none;" name="rel_dir_path" type="text" 
-				  						size="30" maxlength="30" value="" placeholder="download path inside the webfolder">
+		        				<td class="content_listing">
+		        					{% if user|is_anonymous %}
+			        					<select id="select_option{{ c.identifier }}" name="operation" onchange="showHiddenInput(this, {{ c.identifier }})">
+											<option value="download">download</option>
+					  					</select>
+					  					<button type="submit" value="OK"
+											onClick="return confirmDownload({{ c.identifier }})">OK</button>
+					  					<input name="rel_dir_path" type="text" 
+					  						size="30" maxlength="30" value="" placeholder="download path inside the public folder">
+		        					{% else %}
+			        					<select id="select_option{{ c.identifier }}" name="operation" onchange="showHiddenInput(this, {{ c.identifier }})">
+											<option value="subscribe">subscribe</option>
+											<option value="subscribe_download">subscribe & download</option>
+					  					</select>
+					  					<button type="submit" value="OK" 
+					  						onClick="return confirmDownload({{ c.identifier }})">OK</button>
+					  					<input id="hidden_input{{ c.identifier }}" style="display: none;" name="rel_dir_path" type="text" 
+					  						size="30" maxlength="30" value="" placeholder="download path inside the webfolder">
+				  					{% endif %}
 				  				</td>
 		    				</tr>
 		    				{# Extra parameters #}

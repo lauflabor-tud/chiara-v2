@@ -20,6 +20,10 @@ urlpatterns = patterns('',
     # News
     url(r'^news/', 'log.views.news', name='news'),
     
+    # Public folder
+    url(r'^public-folder/$', 'collection.views.public_folder', name='public_folder'),
+    url(r'^public-folder/(?P<rel_path>.*)/$', 'collection.views.public_folder', name='public_folder'),
+
     # My shared folder
     url(r'^shared-folder/$', 'collection.views.my_shared_folder', name='my_shared_folder'),
     url(r'^shared-folder/(?P<rel_path>.*)/$', 'collection.views.my_shared_folder', name='my_shared_folder'),

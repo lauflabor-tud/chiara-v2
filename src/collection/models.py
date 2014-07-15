@@ -3,12 +3,14 @@ from django.db import models, IntegrityError
 from django.db.models import Max
 from django.core.exceptions import ObjectDoesNotExist
 import os, utils.path, utils.hash, re, sys, datetime
-from authentication.models import UserPermission, GroupPermission, Subscription
+import shutil, ConfigParser
+from chiara.settings.common import WEBDAV_DIR, COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE, COLLECTION_TRAITS_FILE, REPOSITORY_DIR
+from chiara.settings.local import PUBLIC_USER
+from authentication.models import User, UserPermission, GroupPermission, Subscription
 from log.models import News
 from utils import enum
-from utils.current_user import get_current_user
 import utils.date
-from collection import info, webfolder
+from collection import info
 from exception.exceptions import *
 
 
@@ -34,6 +36,9 @@ class Collection(models.Model):
                                   verbose_name=u'tags',
                                   related_name='collections',
                                   blank=True)
+    
+    public_access = models.BooleanField(verbose_name=u'public access',
+                                    default=False)
     
     @property        
     def name(self):
@@ -84,17 +89,31 @@ class Collection(models.Model):
             else:
                 return None
         return sub_dir
+
+
+    @staticmethod
+    def get_all_public_collections():
+        return [c for c in Collection.objects.all() if c.public_access]
     
     @staticmethod
     def retrieve_collections(user, tags):
         """Search the collections in the repository by filtering with the given tags 
         and permissions of the user."""
-        # get all collections in newest revision which the user is permitted
-        permitted_collections = [c for c in user.get_all_permissible_collections() if c==c.get_revision(sys.maxint)]
-        # remove all subscribed collections
-        subsribed_collections = [c for c in user.subscriptions.all() 
-                                 if c.revision==c.get_all_revisions().aggregate(Max('revision'))['revision__max']]
-        collections = list(set(permitted_collections)-set(subsribed_collections))
+        logger.debug("anonym: " + str(user.is_anonymous()))
+        # get all public collections in newest revision
+        public_collections = [c for c in Collection.get_all_public_collections() if c==c.get_revision(sys.maxint)]
+        
+        if user.is_anonymous():
+            permitted_collections = []
+            subsribed_collections = []
+        else:
+            # get all collections in newest revision which the user is permitted
+            permitted_collections = [c for c in user.get_all_permissible_collections() if c==c.get_revision(sys.maxint)]
+            # remove all subscribed collections
+            subsribed_collections = [c for c in user.subscriptions.all() 
+                                     if c.revision==c.get_all_revisions().aggregate(Max('revision'))['revision__max']]
+        collections = list((set(public_collections) | set(permitted_collections)) - \
+                           set(subsribed_collections))
         # filter the collections with each of the given tags
         for (key, value) in tags:
             if value.strip()=="":
@@ -151,9 +170,9 @@ class Collection(models.Model):
         root_dir = Directory(revision=1,
                              name=item,
                              user_modified=user,
-                             size=webfolder.get_dir_size(user, rel_path))
+                             size=WebFolder.get_dir_size(user, rel_path))
         root_dir.save()
-        info.create_traits(user, rel_path, root_dir.identifier)
+        info.create_traits(user, rel_path, root_dir.identifier, 1)
         root_dir.save_recursive(user, rel_path)
         root_dir.save()
         
@@ -187,7 +206,8 @@ class Collection(models.Model):
         # Update news log
         content =   "A new collection '" + self.name + "' was added to the repository.\n" + \
                     "Abstract:\n" + self.abstract
-        news = News(content=content,
+        news = News(user=User.get_current_user(),
+                    content=content,
                     collection=self)
         news.save()
 
@@ -208,9 +228,9 @@ class Collection(models.Model):
                                  revision=prev_col.revision+1,
                                  name=item,
                                  user_modified=user,
-                                 size=webfolder.get_dir_size(user, rel_path))
+                                 size=WebFolder.get_dir_size(user, rel_path))
             root_dir.save()
-            info.create_traits(user, rel_path, root_dir.identifier)
+            info.create_traits(user, rel_path, root_dir.identifier, root_dir.revision)
             root_dir.push_recursive(user, rel_path, prev_col.directory)
             
             if root_dir.hash == prev_col.directory.hash:
@@ -246,7 +266,8 @@ class Collection(models.Model):
                 # Update news log
                 content =   "The collection '" + self.name + "' was updated to revision " + \
                             str(self.revision) + ".\n" + "Comment:\n" + self.comment
-                news = News(content=content,
+                news = News(user=User.get_current_user(),
+                            content=content,
                             collection=self)
                 news.save()
         # collection is not at newest revision
@@ -258,13 +279,22 @@ class Collection(models.Model):
         """Download the collection into the given directory of the user's webfolder."""
         # copy files into the webfolder
         rel_dir_path = os.path.join(rel_path, self.directory.name)
-        webfolder.remove_dir_recursive(user, rel_dir_path)
-        webfolder.create_directory(user, rel_dir_path)
+        WebFolder.remove_dir_recursive(user, rel_dir_path)
+        WebFolder.create_directory(user, rel_dir_path)
         self.directory.download_recursive(user, rel_dir_path)
         # Set user subscription
         subscription = Subscription(collection=self,
                                     user=user)
         subscription.save()
+
+    
+    def download_public(self, rel_path):
+        """Download the collection into the given directory of the user's webfolder."""
+        # copy files into the webfolder
+        rel_dir_path = os.path.join(rel_path, self.directory.name)
+        PublicFolder.remove_dir_recursive(rel_dir_path)
+        PublicFolder.create_directory(rel_dir_path)
+        self.directory.download_recursive_public(rel_dir_path)
     
 
     def unsubscribe(self, user):
@@ -282,6 +312,29 @@ class Collection(models.Model):
                                         user=user)
         subscription.save()
 
+
+    def update_public_access(self, access):
+        """Set public access to all revisions of the collection.
+        Parameter access is a boolean value."""
+        if(self.public_access!=access):
+            self.public_access = access
+            self.save()
+            for c in self.get_all_revisions():
+                c.public_access = access
+                c.save()
+                
+            # Update news log
+            if access:
+                readable_access="public"
+            else:
+                readable_access="not public"
+            content =   "The permissions of collection '" + self.name + "' were changed.\n" + \
+                        "The collection is " + readable_access + "."
+            news = News(user=User.get_current_user(),
+                        content=content,
+                        collection=self)
+            news.save()
+            
 
     def update_user_permission(self, user, permission):
         """Grant the given user the given permission of this collection."""
@@ -391,24 +444,24 @@ class Directory(models.Model):
         create connections to this directory."""
         item_hashs = []
         # Save recursive files and directories
-        for item in webfolder.list_dir(user, rel_path):
+        for item in WebFolder.list_dir(user, rel_path):
             rel_item_path = os.path.join(rel_path, item)
-            if webfolder.is_file(user, rel_item_path):                
+            if WebFolder.is_file(user, rel_item_path):                
                 f = File(revision=1, 
                          name=item, 
                          user_modified=user, 
-                         size=webfolder.get_file_size(user, rel_item_path),
-                         hash=utils.hash.hash_file(webfolder.get_abs_path(user, rel_item_path))
+                         size=WebFolder.get_file_size(user, rel_item_path),
+                         hash=utils.hash.hash_file(WebFolder.get_abs_path(user, rel_item_path))
                          )
                 f.save()
-                webfolder.copy_file_to_repository(user, rel_item_path, webfolder.get_repository_file_name(f.identifier, f.revision))
+                WebFolder.copy_file_to_repository(user, rel_item_path, WebFolder.get_repository_file_name(f.identifier, f.revision))
                 self.files.add(f)
                 item_hashs.append(f.hash)
-            elif webfolder.is_dir(user, rel_item_path):
+            elif WebFolder.is_dir(user, rel_item_path):
                 d = Directory(revision=1,
                               name=item,
                               user_modified=user,
-                              size=webfolder.get_dir_size(user, rel_item_path))
+                              size=WebFolder.get_dir_size(user, rel_item_path))
                 
                 d.save()
                 d.save_recursive(user, rel_item_path)
@@ -424,20 +477,20 @@ class Directory(models.Model):
         
         item_hashs = []
         
-        for item in webfolder.list_dir(user, rel_path):
+        for item in WebFolder.list_dir(user, rel_path):
             rel_item_path = os.path.join(rel_path, item)
             # item is a file
-            if webfolder.is_file(user, rel_item_path):
+            if WebFolder.is_file(user, rel_item_path):
                 prev_f = prev_dir.files.filter(name=item)
                 # file is new
                 if not prev_f:
                     f = File(revision=1, 
                              name=item, 
                              user_modified=user, 
-                             size=webfolder.get_file_size(user, rel_item_path),
-                             hash=utils.hash.hash_file(webfolder.get_abs_path(user, rel_item_path)))
+                             size=WebFolder.get_file_size(user, rel_item_path),
+                             hash=utils.hash.hash_file(WebFolder.get_abs_path(user, rel_item_path)))
                     f.save()
-                    webfolder.copy_file_to_repository(user, rel_item_path, webfolder.get_repository_file_name(f.identifier, f.revision))
+                    WebFolder.copy_file_to_repository(user, rel_item_path, WebFolder.get_repository_file_name(f.identifier, f.revision))
                     self.files.add(f)
                     item_hashs.append(f.hash)
                 # file is not new
@@ -446,12 +499,12 @@ class Directory(models.Model):
                              revision=prev_f[0].revision+1, 
                              name=item, 
                              user_modified=user, 
-                             size=webfolder.get_file_size(user, rel_item_path),
-                             hash=utils.hash.hash_file(webfolder.get_abs_path(user, rel_item_path)))
+                             size=WebFolder.get_file_size(user, rel_item_path),
+                             hash=utils.hash.hash_file(WebFolder.get_abs_path(user, rel_item_path)))
                     # file was modified
                     if not prev_f[0].hash == f.hash:
                         f.save()
-                        webfolder.copy_file_to_repository(user, rel_item_path, webfolder.get_repository_file_name(f.identifier, f.revision))
+                        WebFolder.copy_file_to_repository(user, rel_item_path, WebFolder.get_repository_file_name(f.identifier, f.revision))
                         self.files.add(f)
                         item_hashs.append(f.hash)
                     # file was not modified
@@ -460,14 +513,14 @@ class Directory(models.Model):
                         item_hashs.append(prev_f[0].hash)
                 
             # item is a directory
-            elif webfolder.is_dir(user, rel_item_path):
+            elif WebFolder.is_dir(user, rel_item_path):
                 prev_d = prev_dir.sub_directories.filter(name=item)
                 # directory is new
                 if not prev_d:
                     d = Directory(revision=1,
                                   name=item,
                                   user_modified=user,
-                                  size=webfolder.get_dir_size(user, rel_item_path))
+                                  size=WebFolder.get_dir_size(user, rel_item_path))
                     d.save()
                     self.sub_directories.add(d)
                     d.save_recursive(user, rel_item_path)
@@ -478,7 +531,7 @@ class Directory(models.Model):
                                   revision=prev_d[0].revision+1,
                                   name=item,
                                   user_modified=user,
-                                  size=webfolder.get_dir_size(user, rel_item_path))
+                                  size=WebFolder.get_dir_size(user, rel_item_path))
                     d.save()
                     d.push_recursive(user, rel_item_path, prev_d[0])
                     # directory was modified
@@ -500,13 +553,26 @@ class Directory(models.Model):
         """Download all subdirectories and files of this directory."""
         # download files
         for f in self.files.all():
-            webfolder.copy_file_to_webfolder(user, webfolder.get_repository_file_name(f.identifier, f.revision), 
+            WebFolder.copy_file_to_webfolder(user, WebFolder.get_repository_file_name(f.identifier, f.revision), 
                                              os.path.join(rel_path, f.name))
         # download directories
         for d in self.sub_directories.all():
             rel_dir_path = os.path.join(rel_path, d.name)
-            webfolder.create_directory(user, rel_dir_path)
+            WebFolder.create_directory(user, rel_dir_path)
             d.download_recursive(user, rel_dir_path)
+
+    
+    def download_recursive_public(self, rel_path):
+        """Download all subdirectories and files of this directory."""
+        # download files
+        for f in self.files.all():
+            PublicFolder.copy_file_to_public_folder(PublicFolder.get_repository_file_name(f.identifier, f.revision), 
+                                             os.path.join(rel_path, f.name))
+        # download directories
+        for d in self.sub_directories.all():
+            rel_dir_path = os.path.join(rel_path, d.name)
+            PublicFolder.create_directory(rel_dir_path)
+            d.download_recursive_public(rel_dir_path)
                        
 
     def save(self, *args, **kwargs):
@@ -624,4 +690,265 @@ class Tag(models.Model):
         unique_together = (("key", "value"),)
         verbose_name = "tag"
         verbose_name_plural = "tags"
+        
+        
+
+class WebFolder():
+    """Represent the webfolder of each user."""
+    
+    traits_parser = ConfigParser.RawConfigParser()
+    
+    
+    @staticmethod
+    def get_abs_path(user, rel_path):
+        return os.path.join(WEBDAV_DIR, user.user_name, utils.path.no_slash(rel_path))
+    
+    
+    @staticmethod
+    def list_dir(user, rel_path):
+        return os.listdir(WebFolder.get_abs_path(user, rel_path))
+    
+    
+    @staticmethod
+    def is_file(user, rel_path):
+        return os.path.isfile(WebFolder.get_abs_path(user, rel_path))
+    
+    
+    @staticmethod
+    def is_dir(user, rel_path):
+        return os.path.isdir(WebFolder.get_abs_path(user, rel_path))
+    
+    
+    @staticmethod
+    def get_file_size(user, rel_path):
+        return os.path.getsize(WebFolder.get_abs_path(user, rel_path))
+    
+    
+    @staticmethod
+    def get_dir_size(user, rel_path):
+        total_size = 0#get_file_size(user, rel_path)
+        for item in WebFolder.list_dir(user, rel_path):
+            rel_item_path = os.path.join(rel_path, item)
+            if WebFolder.is_file(user, rel_item_path):
+                total_size += WebFolder.get_file_size(user, rel_item_path)
+            elif WebFolder.is_dir(user, rel_item_path):
+                total_size += WebFolder.get_dir_size(user, rel_item_path)
+        return total_size
+    
+    
+    @staticmethod
+    def remove_dir_recursive(user, rel_path):
+        abs_path = WebFolder.get_abs_path(user, rel_path)
+        if os.path.exists(abs_path):
+            shutil.rmtree(abs_path)
+    
+    
+    @staticmethod
+    def get_repository_file_name(file_id, file_rev):
+        return str(file_id) + "-" + str(file_rev) 
+    
+    
+    @staticmethod
+    def copy_file_to_repository(user, rel_src_path, dst_name):
+        abs_src_path = WebFolder.get_abs_path(user, rel_src_path)
+        shutil.copy(abs_src_path, os.path.join(REPOSITORY_DIR, dst_name))
+    
+        
+    @staticmethod
+    def copy_file_to_webfolder(user, src_name, rel_dst_path):
+        abs_dst_path = WebFolder.get_abs_path(user, rel_dst_path)
+        shutil.copy(os.path.join(REPOSITORY_DIR, src_name), abs_dst_path)
+    
+        
+    @staticmethod
+    def create_directory(user, rel_path):
+        abs_path = WebFolder.get_abs_path(user, rel_path)
+        os.makedirs(abs_path)
+    
+    
+    @staticmethod
+    def is_collection(user, rel_path):
+        abs_path = WebFolder.get_abs_path(user, rel_path)
+        if(os.path.exists(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE)) and
+           os.path.exists(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))):
+            WebFolder.traits_parser.read(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))
+            return bool(user.subscriptions.filter(identifier=WebFolder.traits_parser.get('Common', 'id')))
+        else:
+            return False
+        
+    
+    @staticmethod
+    def get_collection_of_item(user, rel_path):
+        rel_path = utils.path.no_slash(rel_path)
+        abs_path = WebFolder.get_abs_path(user, rel_path)
+        if (rel_path=="" or not os.path.exists(abs_path)):
+            return None
+        elif WebFolder.is_collection(user, rel_path):
+            WebFolder.traits_parser.read(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))
+            return user.subscriptions.get(identifier=WebFolder.traits_parser.get('Common', 'id'))
+        else:
+            return WebFolder.get_collection_of_item(user, os.path.split(rel_path)[0])
+    
+    
+    @staticmethod
+    def get_collection(user, rel_path):
+        if WebFolder.is_collection(user, rel_path):
+            WebFolder.traits_parser.read(os.path.join(WebFolder.get_abs_path(user, rel_path), COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))
+            return user.subscriptions.get(identifier=WebFolder.traits_parser.get('Common', 'id'))
+        else:
+            return None 
+        
+    
+    @staticmethod
+    def get_dir(user, rel_path):
+        collection = WebFolder.get_collection_of_item(user, rel_path)
+        if(collection):
+            d = collection.get_dir(rel_path)
+            if(d):
+                return d
+            else:
+                return None
+        else:
+            return None
+    
+    
+    @staticmethod
+    def get_file(user, rel_path):
+        collection = WebFolder.get_collection_of_item(user, rel_path)
+        if(collection):
+            f = collection.get_file(rel_path)
+            if(f):
+                return f
+            else:
+                return None
+        else:
+            return None
+    
+    
+class PublicFolder():
+    """Represent the public folder."""
+    
+    traits_parser = ConfigParser.RawConfigParser()
+        
+        
+    @staticmethod
+    def get_abs_path(rel_path):
+        return os.path.join(WEBDAV_DIR, PUBLIC_USER, utils.path.no_slash(rel_path))
+
+    
+    @staticmethod
+    def list_dir(rel_path):
+        return os.listdir(PublicFolder.get_abs_path(rel_path))
+    
+    
+    @staticmethod
+    def is_file(rel_path):
+        return os.path.isfile(PublicFolder.get_abs_path(rel_path))
+    
+    
+    @staticmethod
+    def is_dir(rel_path):
+        return os.path.isdir(PublicFolder.get_abs_path(rel_path))
+    
+    
+    @staticmethod
+    def get_file_size(rel_path):
+        return os.path.getsize(PublicFolder.get_abs_path(rel_path))
+
+    
+    @staticmethod
+    def get_dir_size(rel_path):
+        total_size = 0#get_file_size(rel_path)
+        for item in PublicFolder.list_dir(rel_path):
+            rel_item_path = os.path.join(rel_path, item)
+            if PublicFolder.is_file(rel_item_path):
+                total_size += PublicFolder.get_file_size(rel_item_path)
+            elif PublicFolder.is_dir(rel_item_path):
+                total_size += PublicFolder.get_dir_size(rel_item_path)
+        return total_size
+    
+    
+    @staticmethod
+    def remove_dir_recursive(rel_path):
+        abs_path = PublicFolder.get_abs_path(rel_path)
+        if os.path.exists(abs_path):
+            shutil.rmtree(abs_path)
+            
+    
+    @staticmethod
+    def get_repository_file_name(file_id, file_rev):
+        return str(file_id) + "-" + str(file_rev) 
+    
+        
+    @staticmethod
+    def copy_file_to_public_folder(src_name, rel_dst_path):
+        abs_dst_path = PublicFolder.get_abs_path(rel_dst_path)
+        shutil.copy(os.path.join(REPOSITORY_DIR, src_name), abs_dst_path)
+
+
+    @staticmethod
+    def create_directory(rel_path):
+        abs_path = PublicFolder.get_abs_path(rel_path)
+        os.makedirs(abs_path)
+        
+    
+    @staticmethod
+    def is_collection(rel_path):
+        abs_path = PublicFolder.get_abs_path(rel_path)
+        if(os.path.exists(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE)) and
+           os.path.exists(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))):
+            PublicFolder.traits_parser.read(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))
+            return bool(Collection.objects.get(identifier=PublicFolder.traits_parser.get('Common', 'id'),
+                                               revision=PublicFolder.traits_parser.get('Common', 'revision')))
+        else:
+            return False
+    
+    
+    @staticmethod
+    def get_collection_of_item(rel_path):
+        rel_path = utils.path.no_slash(rel_path)
+        abs_path = PublicFolder.get_abs_path(rel_path)
+        if (rel_path=="" or not os.path.exists(abs_path)):
+            return None
+        elif PublicFolder.is_collection(rel_path):
+            PublicFolder.traits_parser.read(os.path.join(abs_path, COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))
+            return Collection.objects.get(identifier=PublicFolder.traits_parser.get('Common', 'id'),
+                                          revision=PublicFolder.traits_parser.get('Common', 'revision'))
+        else:
+            return PublicFolder.get_collection_of_item(os.path.split(rel_path)[0])
+        
+    @staticmethod
+    def get_collection(rel_path):
+        if PublicFolder.is_collection(rel_path):
+            PublicFolder.traits_parser.read(os.path.join(PublicFolder.get_abs_path(rel_path), COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE))
+            return Collection.objects.get(identifier=PublicFolder.traits_parser.get('Common', 'id'),
+                                          revision=PublicFolder.traits_parser.get('Common', 'revision'))
+        else:
+            return None 
+        
+    
+    @staticmethod
+    def get_dir(rel_path):
+        collection = PublicFolder.get_collection_of_item(rel_path)
+        if(collection):
+            d = collection.get_dir(rel_path)
+            if(d):
+                return d
+            else:
+                return None
+        else:
+            return None
+    
+    
+    @staticmethod
+    def get_file(rel_path):
+        collection = PublicFolder.get_collection_of_item(rel_path)
+        if(collection):
+            f = collection.get_file(rel_path)
+            if(f):
+                return f
+            else:
+                return None
+        else:
+            return None
 

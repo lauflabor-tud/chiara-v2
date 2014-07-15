@@ -1,17 +1,19 @@
 import os, re, ConfigParser
-from chiara.settings.common import COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE, COLLECTION_TRAITS_FILE
-from collection import webfolder
+from chiara.settings.common import COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE, COLLECTION_TRAITS_FILE, WEBDAV_DIR
 from exception.exceptions import MissingDescriptionFileException
-from utils import enum
+import utils
 
+import logging
+logger = logging.getLogger(__name__)
 
-def create_traits(user, rel_path, cid):
+def create_traits(user, rel_path, cid, revision):
     """Creates the trait file for storing collection informations."""
     traits_parser = ConfigParser.RawConfigParser()
-    traits_path = os.path.join(webfolder.get_abs_path(user, rel_path), COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE)
+    traits_path = os.path.join(WEBDAV_DIR, user.user_name, utils.path.no_slash(rel_path), COLLECTION_INFO_DIR, COLLECTION_TRAITS_FILE)
     f = open(traits_path,'w')
     traits_parser.add_section("Common")
     traits_parser.set("Common", "id", cid)
+    traits_parser.set("Common", "revision", revision)
     traits_parser.write(f)
     f.close()
 
@@ -19,7 +21,7 @@ def parse_description(user, rel_path):
     """Parse the description file of the collection.
     Returns the Description parser if the file was parsed correctly, 
     otherwise raise an ."""
-    info_dir_path = os.path.join(webfolder.get_abs_path(user, rel_path), COLLECTION_INFO_DIR)
+    info_dir_path = os.path.join(WEBDAV_DIR, user.user_name, utils.path.no_slash(rel_path), COLLECTION_INFO_DIR)
     if os.path.exists(os.path.join(info_dir_path, COLLECTION_DESCRIPTION_FILE)):
         description_file = open(os.path.join(info_dir_path, COLLECTION_DESCRIPTION_FILE), 'r')
         desc_parser = DescriptionParser()
@@ -82,7 +84,7 @@ class DescriptionParser():
                             if key[-1] == "s":
                                 key = key[:-1]
                             # check if key choice exist
-                            if key in [k for (k,_) in enum.Tag.CHOICES_A]:
+                            if key in [k for (k,_) in utils.enum.Tag.CHOICES_A]:
                                 values = ':'.join(parts[1:]).strip()
                                 # save all values under the key
                                 for value in values.split(';'):

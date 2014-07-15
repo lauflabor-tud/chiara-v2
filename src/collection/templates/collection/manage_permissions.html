@@ -19,6 +19,22 @@
   		<td class="description"> Collection: <span class="normal_text"> {{ collection.name }} </span></td>
   	</tr>
   	
+  	<form action={% url 'operations' %} method="post">{% csrf_token %}
+  	<tr>
+  		<td class="description"> Public access:
+  			<select name="public">
+  				<option {% if collection.public_access %} selected {% endif %} value="1">yes</option>
+  				<option {% if not collection.public_access %} selected {% endif %} value="0">no</option>
+  			</select>
+  			<button type="submit" value="OK">OK</button>
+  		</td>
+  		{# Extra parameters #}
+	  	<input name="operation" type="hidden" value="public_access" />
+	  	<input name="dir_id" type="hidden" value={{ collection.identifier }} />
+	 	<input name="user_name" type="hidden" value={{ up.user.user_name }} />
+  	</tr>
+  	</form>
+  	
 	{# GROUP ACCESS #}
 	{% if all_users %}
   	<tr>

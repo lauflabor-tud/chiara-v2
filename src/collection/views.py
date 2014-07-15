@@ -7,9 +7,7 @@ from django.core.servers.basehttp import FileWrapper
 from django.http import HttpResponse, Http404
 from django.template.response import TemplateResponse
 
-from collection import webfolder
-from collection.models import Collection
-from collection.webfolder import get_abs_path
+from collection.models import Collection, WebFolder, PublicFolder
 from authentication.models import User, UserPermission, Group, GroupPermission
 from exception.exceptions import *
 from utils import enum 
@@ -22,25 +20,68 @@ def index(request):
     return HttpResponse(t.render())
 
 
+def public_folder(request, rel_path=''):
+    
+    # class the files in categories collection, directory or file
+    dirs = []
+    files = []
+    for item_name in PublicFolder.list_dir(rel_path):
+        rel_item_path = os.path.join(utils.path.no_slash(rel_path), item_name)
+        if PublicFolder.is_file(rel_item_path):
+            file_size = PublicFolder.get_file_size(rel_item_path)
+            f = PublicFolder.get_file(rel_item_path)
+            file_revision = f.revision if f else "-" 
+            files.append({"name": item_name, 
+                          "size": utils.units.convert_data_size(file_size), 
+                          "revision": file_revision,
+                          "part_of_collection": bool(f)})
+        elif PublicFolder.is_dir(rel_item_path):
+            collection = PublicFolder.get_collection(rel_item_path)
+            dir_size = PublicFolder.get_dir_size(rel_item_path)
+            if collection:
+                dirs.append({"type": "c",
+                             "id": collection.identifier,
+                             "name": collection.directory.name, 
+                             "size": utils.units.convert_data_size(dir_size), 
+                             "revision": collection.revision})
+            else:
+                d = PublicFolder.get_dir(rel_item_path)
+                dir_revision = d.revision if d else "-"
+                dirs.append({"type": "d",
+                             "name": item_name, 
+                             "size": utils.units.convert_data_size(dir_size), 
+                             "revision": dir_revision, 
+                             "part_of_collection": bool(d)})
+    
+    # call html
+    t = TemplateResponse(request, 'collection/public_folder.html', 
+                         {'rel_path': utils.path.both_slash(rel_path),
+                          'rel_parent_path': utils.path.no_slash(os.path.dirname(rel_path)),
+                          'dirs': dirs, 
+                          'files': files})
+    return HttpResponse(t.render())
+
+
+
 @permission_required('collection.my_shared_folder', login_url="/login/")
 def my_shared_folder(request, rel_path=''):
 
     # class the files in categories collection, directory or file
     dirs = []
     files = []
-    for item_name in webfolder.list_dir(request.user, rel_path):
+    for item_name in WebFolder.list_dir(request.user, rel_path):
         rel_item_path = os.path.join(utils.path.no_slash(rel_path), item_name)
-        if webfolder.is_file(request.user, rel_item_path):
-            file_size = webfolder.get_file_size(request.user, rel_item_path)
-            f = webfolder.get_file(request.user, rel_item_path)
+        if WebFolder.is_file(request.user, rel_item_path):
+            file_size = WebFolder.get_file_size(request.user, rel_item_path)
+            f = WebFolder.get_file(request.user, rel_item_path)
             file_revision = f.revision if f else "-" 
             files.append({"name": item_name, 
                           "size": utils.units.convert_data_size(file_size), 
                           "revision": file_revision,
                           "part_of_collection": bool(f)})
-        elif webfolder.is_dir(request.user, rel_item_path):
-            collection = webfolder.get_collection(request.user, rel_item_path)
-            dir_size = webfolder.get_dir_size(request.user, rel_item_path)
+        elif WebFolder.is_dir(request.user, rel_item_path):
+            collection = WebFolder.get_collection(request.user, rel_item_path)
+            dir_size = WebFolder.get_dir_size(request.user, rel_item_path)
             if collection:
                 dirs.append({"type": "c",
                              "id": collection.identifier,
@@ -49,7 +90,7 @@ def my_shared_folder(request, rel_path=''):
                              "revision": collection.revision,
                              "access": request.user.get_permission(collection)})
             else:
-                d = webfolder.get_dir(request.user, rel_item_path)
+                d = WebFolder.get_dir(request.user, rel_item_path)
                 dir_revision = d.revision if d else "-"
                 dirs.append({"type": "d",
                              "name": item_name, 
@@ -77,8 +118,12 @@ def operations(request):
         message = "You have successfully unsubsribed the collection '" + collection.name + "'!"
     # remove directory in webfolder
     elif post["operation"]=="remove":
-        webfolder.remove_dir_recursive(request.user, utils.path.url_decode(post["rel_dir_path"]))
-        message = "You have successfully removed the directory '" + utils.path.url_decode(post["rel_dir_path"]) + "' from your webfolder!"
+        if request.user.is_anonymous():
+            PublicFolder.remove_dir_recursive(utils.path.url_decode(post["rel_dir_path"]))
+            message = "You have successfully removed the directory '" + utils.path.url_decode(post["rel_dir_path"]) + "' from the public folder!"
+        else:
+            WebFolder.remove_dir_recursive(request.user, utils.path.url_decode(post["rel_dir_path"]))
+            message = "You have successfully removed the directory '" + utils.path.url_decode(post["rel_dir_path"]) + "' from your webfolder!"
     # add to repository
     elif post["operation"]=="add":
         try:
@@ -115,7 +160,10 @@ def operations(request):
     # pull collection
     elif post["operation"]=="pull":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=post["revision"])
-        collection.download(request.user, os.path.dirname(utils.path.left_slash(utils.path.url_decode(post["rel_dir_path"]))))
+        if request.user.is_anonymous():
+            collection.download_public(os.path.dirname(utils.path.left_slash(utils.path.url_decode(post["rel_dir_path"]))))
+        else:
+            collection.download(request.user, os.path.dirname(utils.path.left_slash(utils.path.url_decode(post["rel_dir_path"]))))
         message = "You have successfully updated the collection '" + collection.directory.name + "' to revision " + str(collection.revision) + "!"
     # subscribe collection
     elif post["operation"]=="subscribe":
@@ -135,10 +183,24 @@ def operations(request):
         rel_path = utils.path.left_slash(utils.path.url_decode(post["rel_dir_path"]))
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         collection = collection.get_revision(sys.maxint)
-        collection.download(request.user, rel_path)
+        if request.user.is_anonymous():
+            collection.download_public(rel_path)
+        else:
+            collection.download(request.user, rel_path)
         message = "You have successfully downloaded the collection '"  + collection.name + "' into the directory '" + rel_path + "'!"
     elif post["operation"]=="permissions":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
+        t = TemplateResponse(request, 'collection/manage_permissions.html',
+                             {'collection': collection,
+                              'userpermission_set': collection.userpermission_set.all(),
+                              'grouppermission_set': collection.grouppermission_set.all(),
+                              'all_users': User.objects.all(),
+                              'all_groups': Group.objects.all(),
+                              'permission_choices': [k for (k,_) in utils.enum.Permission.CHOICES] })
+        return HttpResponse(t.render())
+    elif post["operation"]=="public_access":
+        collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
+        collection.update_public_access(bool(int(post["public"])))
         t = TemplateResponse(request, 'collection/manage_permissions.html',
                              {'collection': collection,
                               'userpermission_set': collection.userpermission_set.all(),
@@ -307,13 +369,18 @@ def manage_my_collections(request):
 
 def download_to_disk(request, rel_file_path):
     rel_file_path = utils.path.url_decode(rel_file_path);
-    abs_file_path = get_abs_path(request.user, rel_file_path)
+    if request.user.is_anonymous():
+        abs_file_path = PublicFolder.get_abs_path(rel_file_path)
+    else:
+        abs_file_path = WebFolder.get_abs_path(request.user, rel_file_path)
     download_name =os.path.basename(abs_file_path)
     wrapper = FileWrapper(open(abs_file_path))
     content_type = mimetypes.guess_type(abs_file_path)[0]
     response = HttpResponse(wrapper,content_type=content_type)
-    response['Content-Length'] = webfolder.get_file_size(request.user, rel_file_path)   
+    if request.user.is_anonymous():
+        response['Content-Length'] = PublicFolder.get_file_size(rel_file_path)  
+    else:
+        response['Content-Length'] = WebFolder.get_file_size(request.user, rel_file_path)   
     response['Content-Disposition'] = "attachment; filename=%s" % download_name
     return response
-
 

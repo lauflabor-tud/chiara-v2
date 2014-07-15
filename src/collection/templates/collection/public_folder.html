@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load collection_filters %}
+
+{% block head_block %}
+	<link rel="stylesheet" type="text/css" href="{% static 'base/css/my_shared_folder.css' %}">
+{% endblock %}
+
+{% block title %} Public folder {% endblock %}
+
+{% block public_folder_tab %}
+<td class="tab"><a class="tab-selected" href={% url 'public_folder' %}>Public folder</a></td>
+{% endblock %}
+
+{% block content %}
+
+<table class="content_frame">
+    {# Current Directory #}
+    <tr>
+  	  <td class="description" colspan="3"> Current directory: <span class="normal_text"> {{ rel_path }} </span></td>
+    </tr>
+
+	<table class="content_listing-fixed">
+	{% if dirs or files or not rel_path == "/" %}  
+	  {# Header #}
+	  <tr>
+	  	<th class="content_listing"> Name </th>
+	  	<th class="content_listing"> ID / Revision / Size </th>
+	  	<th class="content_listing"> Action </th>
+	  </tr>
+	  
+	  {# .. to navigate to parent directory #}
+	  {% if not rel_path == "/" %}
+	  	<tr>
+	  	  <td class="content_listing"><a class="listdir-name" href={% url 'public_folder' %}{{ rel_parent_path|urlencode }}> .. </a></td>
+	  	  <td class="content_listing"> </td>
+	  	  <td class="content_listing"> </td>
+	  	</tr>
+	  {% endif %}
+	  
+	  {% for d in dirs %}
+	  	{# List Collections #}
+	  	{% if d.type == "c" %}
+	  	<form action={% url 'operations'%} method="post">{% csrf_token %}
+	  	  <tr>
+			<td class="content_listing"><a class="listdir-name" href={{ d.name|urlencode:"" }}> {{ d.name }} </a></td>
+			<td class="content_listing"><div> {{ d.id }} / {{ d.revision }} / {{ d.size }} </div></td>
+			<td class="content_listing"> 
+			  <select name="operation">
+				<option value="pull:choose_revision">update to revision</option>
+				<option value="remove">remove from public folder</option>
+			  </select>
+		 	  <button type="submit" value="OK">OK</button>
+		 	  {# Extra parameters #}
+		 	  {% make_list rel_path d.name as rel_dir_path_list %}
+		 	  <input name="rel_dir_path" type="hidden" value={{ rel_dir_path_list|url_join|urlencode }} />
+			  <input name="dir_name" type="hidden" value={{ d.name|urlencode }} />
+			  <input name="dir_id" type="hidden" value={{ d.id }} />
+			  <input name="dir_revision" type="hidden" value={{ d.revision }} />
+			</td>
+		  </tr>
+		</form>
+	  	{% endif %}
+	  	
+	  	{# List Directories #}
+	  	{% if d.type == "d" %}
+	  	<form action={% url 'operations'%} method="post">{% csrf_token %}
+	  	  <tr>
+			<td class="content_listing"><a class="listdir-name" href={{ d.name|urlencode:"" }}> {{ d.name }} </a></td>
+			<td class="content_listing"> - / {{ d.revision }} / {{ d.size }} </td>
+			<td class="content_listing">
+				{% if not d.part_of_collection %}
+					<select name="operation">
+						<option value="remove">remove from public folder</option>
+			  		</select>
+		 	  		<button type="submit" value="OK">OK</button>
+			 	  	{# Extra parameters #}
+			 	  	{% make_list rel_path d.name as rel_dir_path_list %}
+					<input name="rel_dir_path" type="hidden" value={{ rel_dir_path_list|url_join|urlencode }} />
+				  	<input name="dir_name" type="hidden" value={{ d.name|urlencode }} />
+				  	<input name="dir_revision" type="hidden" value={{ d.revision }} />
+				{% endif %}
+			</td>
+	  	  </tr>
+	  	</form>
+	  	{% endif %}
+	  {% endfor %}
+	  
+	  {# List Files #}
+	  {% for f in files %}
+	    <tr>
+			{% make_list rel_path f.name as rel_file_path_list %}
+			<td class="content_listing"><a class="listfile-name" href={% url 'download_to_disk' rel_file_path_list|url_join|urlencode %}> {{ f.name }} </a></td>
+			<td class="content_listing"> - / {{ f.revision }} / {{ f.size }} </td>
+			<td class="content_listing"> </td>
+	  	</tr>
+	  {% endfor %}
+	  
+	  {% else %}
+		<tr><td class="content_listing"> Public folder is empty! </td></tr>
+	  {% endif %}
+	</table> 
+</table>
+{% endblock %}

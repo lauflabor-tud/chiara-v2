@@ -40,3 +40,7 @@ def get_readable_permission(value):
     for (k,v) in utils.enum.Permission.CHOICES:
         if k==value:
             return v
+        
+@register.filter
+def is_anonymous(value):
+    return value.is_anonymous()
