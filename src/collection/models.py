@@ -203,8 +203,8 @@ class Collection(models.Model):
         subscription.save()
         
         # Update news log
-        content =   "A new collection '" + self.name + "' was added to the repository.\n" + \
-                    "Abstract:\n" + self.abstract
+        content =   "A new collection <b>" + self.name + "</ib was added to the repository.\n" + \
+                    "<i><b>Abstract:</b>\n" + self.abstract + "</i>"
         news = News(user=User.get_current_user(),
                     content=content,
                     collection=self)
@@ -263,8 +263,8 @@ class Collection(models.Model):
                 subscription.save()
                 
                 # Update news log
-                content =   "The collection '" + self.name + "' was updated to revision " + \
-                            str(self.revision) + ".\n" + "Comment:\n" + self.comment
+                content =   "The collection <b>" + self.name + "</b> was updated to revision " + \
+                            str(self.revision) + ".\n" + "<i><b>Comment:</b>\n" + self.comment + "</i>"
                 news = News(user=User.get_current_user(),
                             content=content,
                             collection=self)
@@ -327,7 +327,7 @@ class Collection(models.Model):
                 readable_access="public"
             else:
                 readable_access="not public"
-            content =   "The permissions of collection '" + self.name + "' were changed.\n" + \
+            content =   "The permissions of collection <b>" + self.name + "</b> were changed.\n" + \
                         "The collection is " + readable_access + "."
             news = News(user=User.get_current_user(),
                         content=content,
@@ -349,8 +349,8 @@ class Collection(models.Model):
             p.delete_all_revisions()
             
         # Update news log
-        content =   "The user permissions of collection '" + self.name + "' were changed.\n" + \
-                    "The User '" + user.user_name + "' has " + utils.enum.Permission.get_readable_permission(permission) + " access."
+        content =   "The user permissions of collection <b>" + self.name + "</b> were changed.\n" + \
+                    "The user <b>" + user.user_name + "</b> has " + utils.enum.Permission.get_readable_permission(permission) + " access."
         news = News(user=User.get_current_user(),
                     content=content,
                     collection=self)
@@ -371,8 +371,8 @@ class Collection(models.Model):
             permission.delete_all_revisions()
 
         # Update news log
-        content =   "The group permissions of collection '" + self.name + "' were changed.\n" + \
-                    "The Group '" + group.group_name + "' has " + utils.enum.Permission.get_readable_permission(permission) + " access."
+        content =   "The group permissions of collection <b>" + self.name + "</b> were changed.\n" + \
+                    "The group <b>" + group.group_name + "</b> has " + utils.enum.Permission.get_readable_permission(permission) + " access."
         news = News(user=User.get_current_user(),
                     content=content,
                     collection=self)

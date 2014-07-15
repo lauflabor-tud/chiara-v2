@@ -85,7 +85,7 @@
 	        			<form action={% url 'operations' %} method="post">{% csrf_token %}
 		        			<tr>
 		        				<td class="content_listing"> {{ c.name }} </td>
-		        				<td class="content_listing"> {{ c.abstract|linebreaks }} </td>
+		        				<td class="content_listing"> {{ c.abstract|safe|linebreaks }} </td>
 		        				<td class="content_listing"> 
 		        					{% for topic in c.topics %}
 		        						{{ topic }}{% if not forloop.last %},{% endif %}

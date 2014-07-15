@@ -39,7 +39,7 @@
   	  <tr>
 		<td class="content_listing"> {{ n.date }} </td>
 		<td class="content_listing"> {{ n.user }} </td>
-		<td class="content_listing"> {{ n.content|linebreaks }} </td>
+		<td class="content_listing"> {{ n.content|safe|linebreaks }} </td>
 	  </tr>
 	</form>
   {% endfor %}

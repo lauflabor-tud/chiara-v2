@@ -20,7 +20,7 @@ def create_new_user_extras(user):
         os.makedirs(webdav_path)
         
     # Update news log
-    content =   "A new user '" + user.user_name + "' has joined chiara."
+    content =   "A new user <b>" + user.user_name + "</b> has joined chiara."
     news = News(user=User.get_current_user(), content=content)
     news.save()
 
@@ -197,7 +197,7 @@ class Membership(models.Model):
     
     def save(self, *args, **kwargs):
         # Update news log
-        content =   "The user '" + self.user.user_name + "' has joined the group '" + self.group.group_name + "'."
+        content =   "The user <b>" + self.user.user_name + "</b> has joined the group <b>" + self.group.group_name + "</b>."
         news = News(user=User.get_current_user(),
                     content=content,
                     group=self.group)
@@ -206,7 +206,7 @@ class Membership(models.Model):
         
     def delete(self, *args, **kwargs):
         # Update news log
-        content =   "The user '" + self.user.user_name + "' has left the group '" + self.group.group_name + "'."
+        content =   "The user <b>" + self.user.user_name + "</b> has left the group <b>" + self.group.group_name + "</b>."
         news = News(user=User.get_current_user(),
                     content=content,
                     group=self.group)

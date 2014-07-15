@@ -49,7 +49,7 @@
   	<form action={% url 'operations'%} method="post">{% csrf_token %}
   	  <tr>
 		<td class="content_listing"> {{ c.name }} </td>
-		<td class="content_listing"><div> {{ c.abstract|linebreaks }} </div></td>
+		<td class="content_listing"><div> {{ c.abstract|safe|linebreaks }} </div></td>
 		<td class="content_listing">
 		  <select id="select_option{{ c.id }}" name="operation" onchange="showHiddenInput(this, {{ c.id }})">
 		  	{% if c.access == "W" %}
