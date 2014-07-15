@@ -45,7 +45,7 @@
         		{% for c in collections %}
         			<tr>
         				<td class="compendium"> {{ c.revision }} </td>
-        				<td class="compendium"> {{ c.comment }} </td>
+        				<td class="compendium"> {{ c.comment|linebreaks }} </td>
         				<td class="compendium"> {{ c.directory.date_modified }} </td>
         				<td class="compendium"> {{ c.directory.user_modified }} </td>
     				</tr>
