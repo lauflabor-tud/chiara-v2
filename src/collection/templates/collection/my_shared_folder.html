@@ -21,7 +21,7 @@
     </tr>
 
 	<table class="content_listing-fixed">
-	{% if dirs %}  
+	{% if dirs or files or not rel_path == "/" %}  
 	  {# Header #}
 	  <tr>
 	  	<th class="content_listing"> Name </th>
@@ -49,8 +49,8 @@
 			  <select name="operation">
 			  	{% if d.access == "W" %}
 					<option value="push:commit">push local revision</option>
-					<option value="pull:choose_revision">update to revision</option>
 				{% endif %}
+				<option value="pull:choose_revision">update to revision</option>
 				<option value="unsubscribe">unsubscribe</option>
 			  </select>
 		 	  <button type="submit" value="OK">OK</button>
