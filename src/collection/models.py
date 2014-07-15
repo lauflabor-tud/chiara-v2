@@ -105,15 +105,14 @@ class Collection(models.Model):
         
         if user.is_anonymous():
             permitted_collections = []
-            subsribed_collections = []
+            subscribed_collections = []
         else:
             # get all collections in newest revision which the user is permitted
             permitted_collections = [c for c in user.get_all_permissible_collections() if c==c.get_revision(sys.maxint)]
             # remove all subscribed collections
-            subsribed_collections = [c for c in user.subscriptions.all() 
-                                     if c.revision==c.get_all_revisions().aggregate(Max('revision'))['revision__max']]
+            subscribed_collections = [c.get_revision(sys.maxint) for c in user.subscriptions.all()]
         collections = list((set(public_collections) | set(permitted_collections)) - \
-                           set(subsribed_collections))
+                           set(subscribed_collections))
         # filter the collections with each of the given tags
         for (key, value) in tags:
             if value.strip()=="":
