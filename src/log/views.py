@@ -27,7 +27,7 @@ def news(request):
             news = [n for n in News.objects.order_by("-date")
                     if ((n.collection==None and n.group==None) # general news
                     or  (n.collection!=None and n.collection.public_access) # user news (public collection)
-                    or  (n.collection!=None and n.collection in request.user.permissions.all()) # user news (collection)
+                    or  (n.collection!=None and n.collection in request.user.get_all_permissible_collections()) # user news (collection)
                     or  (n.group!=None and n.group in request.user.groups.all())) # user news (group)
                     and (n.date>=last_date)]
     except Collection.DoesNotExist:
