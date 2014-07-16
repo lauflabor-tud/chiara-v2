@@ -203,7 +203,7 @@ class Collection(models.Model):
         subscription.save()
         
         # Update news log
-        content =   "A new collection <b>" + self.name + "</ib was added to the repository.\n" + \
+        content =   "A new collection <b>" + self.name + "</b> was added to the repository.\n" + \
                     "<i><b>Abstract:</b>\n" + self.abstract + "</i>"
         news = News(user=User.get_current_user(),
                     content=content,
