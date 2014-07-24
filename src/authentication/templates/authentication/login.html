@@ -19,11 +19,11 @@ class="accounttab-selected"
 {% else %}
 
 {% if form.errors %}
-	<p class="error">Your username and password didn't match. Please try again!</p>
+	<p class="error">Your username and password didn't match. Please try it again!</p>
 {% endif %}
+<p class="info"> Please enter your username and password: </p>
 
 <form method="post">{% csrf_token %}
-<p class="info"> Please enter your username and password: </p>
 <table>
 <tr>
     <td class="description">{{ form.username.label_tag }}</td>

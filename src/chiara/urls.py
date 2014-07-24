@@ -2,6 +2,7 @@ import os
 from chiara.settings.common import SRC_DIR
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
+from django.contrib.auth.views import password_reset
 admin.autodiscover()
 
 urlpatterns = patterns('',
@@ -13,9 +14,12 @@ urlpatterns = patterns('',
     url(r'^$', 'collection.views.index'),
     
     # Authentication
-    url(r'^preferences/', 'authentication.views.preferences', name='preferences'),
+    url(r'^preferences/$', 'authentication.views.preferences', name='preferences'),
+    url(r'^preferences/change-password/$', 'authentication.views.password_change', name='password_change'),
+    url(r'^preferences/change-password/done/$', 'authentication.views.password_change_done', name='password_change_done'),
     url(r'^login/$', 'authentication.views.login', name='login'),
     url(r'^logout/$', 'authentication.views.logout', name='logout'),
+    
     
     # News
     url(r'^news/', 'log.views.news', name='news'),

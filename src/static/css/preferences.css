@@ -1,0 +1,9 @@
+a.list_preferences {
+  font: bold 12px Verdana, Arial, Helvetica;
+  color: #2040cf;
+  text-decoration: none;
+  margin-left: 10px;
+}
+a.list_preferences:hover {
+  color: #40709a;
+}
