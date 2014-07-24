@@ -34,6 +34,10 @@ def urldecode(value):
 @register.filter
 def url_join(value):
     return os.path.join(*value)
+        
+@register.filter
+def is_anonymous(value):
+    return value.is_anonymous()
 
 @register.filter
 def get_readable_permission(value):
@@ -41,6 +45,3 @@ def get_readable_permission(value):
         if k==value:
             return v
         
-@register.filter
-def is_anonymous(value):
-    return value.is_anonymous()

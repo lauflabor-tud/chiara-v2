@@ -47,6 +47,7 @@ INSTALLED_APPS = (
     'authentication',
     'collection',
     'log',
+    'lib',
     #'treebeard',
     'south',
 )
