@@ -1,5 +1,6 @@
 from django import template
 import os, urllib, utils.enum
+from chiara.settings.local import FORCE_SCRIPT_NAME;
 
 register = template.Library()
 
@@ -45,3 +46,6 @@ def get_readable_permission(value):
         if k==value:
             return v
         
+@register.filter
+def join_force_script_name(value):
+    return os.path.join(FORCE_SCRIPT_NAME, value);

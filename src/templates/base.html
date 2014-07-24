@@ -1,5 +1,7 @@
 <!doctype html>
 {% load staticfiles %}
+{% load template_filters %}
+
 <head>
     <meta charset="utf-8">
     <title>{% block title %}Chiara data management{% endblock %}</title>
@@ -70,9 +72,9 @@
     <table class="footbar">
     <tr>
     	{% if user.is_admin %}
-  			<td class="foottab"><a class="foottab-notselected" href='/admin' target="_blank">Administration</a></td>    	
+  			<td class="foottab"><a class="foottab-notselected" href={{'admin'|join_force_script_name}} target="_blank">Administration</a></td>    	
   		{% endif %}
-  		<td class="foottab"><a class="foottab-notselected" href='/doc/index.html' target="_blank">Documentation</a></td>    	
+  		<td class="foottab"><a class="foottab-notselected" href={{'doc/index.html'|join_force_script_name}} target="_blank">Documentation</a></td>    	
     </tr>
     </table>
     
