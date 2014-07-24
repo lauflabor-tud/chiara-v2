@@ -85,7 +85,7 @@ class User(AbstractBaseUser):
     user_name = models.CharField(verbose_name=u'user name', max_length=30, unique=True)
     first_name = models.CharField(verbose_name=u'first name', max_length=30)
     last_name = models.CharField(verbose_name=u'last name', max_length=30)
-    email = models.EmailField(verbose_name=u'email address', max_length=120, unique=True)
+    email = models.EmailField(verbose_name=u'email address', max_length=120, unique=True, blank=True)
     
     is_active = models.BooleanField(verbose_name=u'is active', default=True)
     is_admin = models.BooleanField(verbose_name=u'is admin', default=False)
