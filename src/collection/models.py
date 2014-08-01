@@ -831,7 +831,7 @@ class WebFolder():
         
     @staticmethod
     def is_mounted(user):
-        os.path.ismount(WebFolder.get_abs_path(user, OWNCLOUD_DIR_NAME))
+        return os.path.ismount(WebFolder.get_abs_path(user, OWNCLOUD_DIR_NAME))
         
 
     @staticmethod
