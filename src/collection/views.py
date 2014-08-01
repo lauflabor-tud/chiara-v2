@@ -4,16 +4,24 @@ import os, sys, utils.path, utils.units, urllib
 
 from django.contrib.auth.decorators import permission_required
 from django.core.servers.basehttp import FileWrapper
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.template.response import TemplateResponse
+from django import forms
 
 from collection.models import Collection, WebFolder, PublicFolder
 from authentication.models import User, UserPermission, Group, GroupPermission
 from exception.exceptions import *
 from utils import enum 
+from chiara.settings.local import OWNCLOUD_DIR_NAME
 
 
 logger = logging.getLogger(__name__)
+
+
+class OwncloudForm(forms.Form):
+    user = forms.CharField()
+    password = forms.CharField(widget=forms.PasswordInput)
+    
 
 def index(request):
     t = TemplateResponse(request, 'base.html', {})
@@ -38,12 +46,14 @@ def public_folder(request, rel_path=''):
         elif PublicFolder.is_dir(rel_item_path):
             collection = PublicFolder.get_collection(rel_item_path)
             dir_size = PublicFolder.get_dir_size(rel_item_path)
+            # collection
             if collection:
                 dirs.append({"type": "c",
                              "id": collection.identifier,
                              "name": collection.directory.name, 
                              "size": utils.units.convert_data_size(dir_size), 
                              "revision": collection.revision})
+            # standard directory
             else:
                 d = PublicFolder.get_dir(rel_item_path)
                 dir_revision = d.revision if d else "-"
@@ -66,9 +76,14 @@ def public_folder(request, rel_path=''):
 @permission_required('collection.my_shared_folder', login_url="/login/")
 def my_shared_folder(request, rel_path=''):
 
+    # create ownCloud directory
+    if "create_owncloud_dir" in request.POST:
+        WebFolder.create_owncloud_dir(request.user)
+
     # class the files in categories collection, directory or file
     dirs = []
     files = []
+    owncloud = None
     for item_name in WebFolder.list_dir(request.user, rel_path):
         rel_item_path = os.path.join(utils.path.no_slash(rel_path), item_name)
         if WebFolder.is_file(request.user, rel_item_path):
@@ -82,13 +97,20 @@ def my_shared_folder(request, rel_path=''):
         elif WebFolder.is_dir(request.user, rel_item_path):
             collection = WebFolder.get_collection(request.user, rel_item_path)
             dir_size = WebFolder.get_dir_size(request.user, rel_item_path)
-            if collection:
+            # ownCloud directory
+            if utils.path.no_slash(rel_item_path)==OWNCLOUD_DIR_NAME:
+                owncloud = {"name": item_name,
+                            "size": dir_size,
+                            "is_mounted": WebFolder.is_mounted(request.user)}
+            # collection
+            elif collection:
                 dirs.append({"type": "c",
                              "id": collection.identifier,
                              "name": collection.directory.name, 
                              "size": utils.units.convert_data_size(dir_size), 
                              "revision": collection.revision,
                              "access": request.user.get_permission(collection)})
+            # standard directory
             else:
                 d = WebFolder.get_dir(request.user, rel_item_path)
                 dir_revision = d.revision if d else "-"
@@ -103,7 +125,8 @@ def my_shared_folder(request, rel_path=''):
                          {'rel_path': utils.path.both_slash(rel_path),
                           'rel_parent_path': utils.path.no_slash(os.path.dirname(rel_path)),
                           'dirs': dirs, 
-                          'files': files})
+                          'files': files,
+                          'owncloud': owncloud})
     return HttpResponse(t.render())
 
 
@@ -281,6 +304,15 @@ def operations(request):
                               'all_groups': Group.objects.all(),
                               'permission_choices': [k for (k,_) in utils.enum.Permission.CHOICES] })
         return HttpResponse(t.render())
+    elif post["operation"]=="owncloud:mount":
+        return mount_owncloud(request)
+    elif post["operation"]=="owncloud:unmount":
+        is_unmounted = WebFolder.unmount_owncloud(request.user)
+        if is_unmounted:
+            message = "Your ownCloud directory was successfully unmounted."
+        else:
+            error = True
+            message = "Unmounting your ownCloud directory failed. Please try again!"
     else:
         pass
     
@@ -292,6 +324,35 @@ def operations(request):
                              {'message': message})
     return HttpResponse(t.render())
 
+
+
+def mount_owncloud(request):
+    # If the request is a http post
+    if request.method == 'POST' and 'operation' not in request.POST:
+        form = OwncloudForm(request.POST)
+
+        if form.is_valid():
+            # Mount ownCloud
+            is_mounted = WebFolder.mount_owncloud(request.user, request.POST["user"], request.POST["password"])
+            if is_mounted:
+                message = "Your ownCloud directory was successfully mounted."
+                t = TemplateResponse(request, 'info.html', 
+                             {'message': message})
+            else:
+                message = "Mounting your ownCloud directory failed. Please try again!"
+                t = TemplateResponse(request, 'error.html',
+                             {'message': message})
+            return HttpResponse(t.render())
+        else:
+            # The supplied form contained errors - just print them to the terminal.
+            print form.errors
+    else:
+        # If the request was not a POST, display the form to enter details.
+        form = OwncloudForm()
+    
+    t = TemplateResponse(request, 'collection/mount_owncloud.html', {'form': form})
+    return HttpResponse(t.render())
+    
 
 def retrieve_new_collections(request):
     

@@ -2,10 +2,10 @@ from __future__ import division
 from django.db import models, IntegrityError
 from django.db.models import Max
 from django.core.exceptions import ObjectDoesNotExist
-import os, utils.path, utils.hash, re, sys, datetime
+import os, utils.path, utils.hash, re, sys, datetime, subprocess
 import shutil, ConfigParser
 from chiara.settings.common import WEBDAV_DIR, COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE, COLLECTION_TRAITS_FILE, REPOSITORY_DIR
-from chiara.settings.local import PUBLIC_USER
+from chiara.settings.local import PUBLIC_USER, OWNCLOUD_DIR_NAME
 from authentication.models import User, UserPermission, GroupPermission, Subscription
 from log.models import News
 from utils import enum
@@ -822,6 +822,30 @@ class WebFolder():
                 return None
         else:
             return None
+        
+    
+    @staticmethod
+    def create_owncloud_dir(user):
+        WebFolder.create_directory(user, OWNCLOUD_DIR_NAME)
+        
+        
+    @staticmethod
+    def is_mounted(user):
+        os.path.ismount(WebFolder.get_abs_path(user, OWNCLOUD_DIR_NAME))
+        
+
+    @staticmethod
+    def mount_owncloud(user, owncloud_user, owncloud_password):
+        os.system("bash/mount_owncloud.sh " + owncloud_user + " " + 
+                  owncloud_password + " " + 
+                  WebFolder.get_abs_path(user, OWNCLOUD_DIR_NAME))
+        return WebFolder.is_mounted(user)
+    
+    
+    @staticmethod
+    def unmount_owncloud(user):
+        os.system("bash/unmount_owncloud.sh " + WebFolder.get_abs_path(user, OWNCLOUD_DIR_NAME))
+        return not WebFolder.is_mounted(user)
     
     
 class PublicFolder():
@@ -950,4 +974,5 @@ class PublicFolder():
                 return None
         else:
             return None
-
+        
+    

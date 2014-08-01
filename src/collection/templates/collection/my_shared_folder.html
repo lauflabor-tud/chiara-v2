@@ -17,7 +17,12 @@
 <table class="content_frame">
     {# Current Directory #}
     <tr>
-  	  <td class="description" colspan="3"> Current directory: <span class="normal_text"> {{ rel_path }} </span></td>
+  	  <td class="description"> Current directory: <span class="normal_text"> {{ rel_path }} </span></td>
+  	  {% if not owncloud %}
+  	  	<td class="option"><form action={% url 'my_shared_folder' %} method="post">{% csrf_token %}
+  	  		<button name="create_owncloud_dir" type="submit" value="true">Create ownCloud directory</button>
+  	  	</form></td>
+  	  {% endif %}
     </tr>
 
 	<table class="content_listing-fixed">
@@ -36,6 +41,32 @@
 	  	  <td class="content_listing"> </td>
 	  	  <td class="content_listing"> </td>
 	  	</tr>
+	  {% endif %}
+	  
+	  {# Show ownCloud #}
+	  {% if owncloud %}
+	    <form action={% url 'operations'%} method="post">{% csrf_token %}
+	  	  <tr>
+			<td class="content_listing"><a class="listdir-name" href={{ owncloud.name|urlencode:"" }}> {{ owncloud.name }} </a></td>
+			<td class="content_listing"><div> - / - / {{ owncloud.size }} </div></td>
+			<td class="content_listing"> 
+			  <select name="operation">
+			  	{% if owncloud.is_mounted %}
+					<option value="owncloud:unmount">unmount</option>
+				{% endif %}
+				<option value="owncloud:mount">mount owncloud</option>
+				<option value="remove">remove from webfolder</option>
+			  </select>
+		 	  <button type="submit" value="OK">OK</button>
+		 	  {# Extra parameters #}
+		 	  {% make_list rel_path owncloud.name as rel_dir_path_list %}
+		 	  <input name="rel_dir_path" type="hidden" value={{ rel_dir_path_list|url_join|urlencode }} />
+			  <input name="dir_name" type="hidden" value={{ d.name|urlencode }} />
+			  <input name="dir_id" type="hidden" value={{ d.id }} />
+			  <input name="dir_revision" type="hidden" value={{ d.revision }} />
+			</td>
+		  </tr>
+		</form>	
 	  {% endif %}
 	  
 	  {% for d in dirs %}
