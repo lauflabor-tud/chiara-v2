@@ -100,7 +100,7 @@ def my_shared_folder(request, rel_path=''):
             # ownCloud directory
             if utils.path.no_slash(rel_item_path)==OWNCLOUD_DIR_NAME:
                 owncloud = {"name": item_name,
-                            "size": dir_size,
+                            "size": utils.units.convert_data_size(dir_size),
                             "is_mounted": WebFolder.is_mounted(request.user)}
             # collection
             elif collection:
