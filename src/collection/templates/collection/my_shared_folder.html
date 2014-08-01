@@ -18,7 +18,7 @@
     {# Current Directory #}
     <tr>
   	  <td class="description"> Current directory: <span class="normal_text"> {{ rel_path }} </span></td>
-  	  {% if not owncloud %}
+  	  {% if not owncloud and rel_path == "/" %}
   	  	<td class="option"><form action={% url 'my_shared_folder' %} method="post">{% csrf_token %}
   	  		<button name="create_owncloud_dir" type="submit" value="true">Create ownCloud directory</button>
   	  	</form></td>
