@@ -15,6 +15,7 @@ SRC_DIR = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
 PROJECT_DIR = os.path.dirname(SRC_DIR)
 WEBDAV_DIR = os.path.join(SRC_DIR, 'webdav')
 REPOSITORY_DIR = os.path.join(SRC_DIR, 'repository')
+BASH_DIR = os.path.join(SRC_DIR, 'bash')
 
 # name of system directories and files
 COLLECTION_INFO_DIR ='_chiara'

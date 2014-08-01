@@ -4,7 +4,7 @@ from django.db.models import Max
 from django.core.exceptions import ObjectDoesNotExist
 import os, utils.path, utils.hash, re, sys, datetime, subprocess
 import shutil, ConfigParser
-from chiara.settings.common import WEBDAV_DIR, COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE, COLLECTION_TRAITS_FILE, REPOSITORY_DIR
+from chiara.settings.common import WEBDAV_DIR, COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE, COLLECTION_TRAITS_FILE, REPOSITORY_DIR, BASH_DIR
 from chiara.settings.local import PUBLIC_USER, OWNCLOUD_DIR_NAME
 from authentication.models import User, UserPermission, GroupPermission, Subscription
 from log.models import News
@@ -690,7 +690,8 @@ class Tag(models.Model):
         verbose_name = "tag"
         verbose_name_plural = "tags"
         
-        
+
+from subprocess import Popen, PIPE, STDOUT
 
 class WebFolder():
     """Represent the webfolder of each user."""
@@ -836,15 +837,19 @@ class WebFolder():
 
     @staticmethod
     def mount_owncloud(user, owncloud_user, owncloud_password):
-        os.system("bash/mount_owncloud.sh " + owncloud_user + " " + 
-                  owncloud_password + " " + 
-                  WebFolder.get_abs_path(user, OWNCLOUD_DIR_NAME))
+        cmd = os.path.join(BASH_DIR, "mount_owncloud.sh") + " " + owncloud_user + " " + owncloud_password + " " + WebFolder.get_abs_path(user, OWNCLOUD_DIR_NAME)
+        p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+        error = p.stderr.read()
+        logger.error("Mount ownCloud in webfolder " + user.user_name + ": " + error)
         return WebFolder.is_mounted(user)
     
     
     @staticmethod
     def unmount_owncloud(user):
-        os.system("bash/unmount_owncloud.sh " + WebFolder.get_abs_path(user, OWNCLOUD_DIR_NAME))
+        cmd = os.path.join(BASH_DIR, "unmount_owncloud.sh") + " "  + WebFolder.get_abs_path(user, OWNCLOUD_DIR_NAME)
+        p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, close_fds=True)
+        error = p.stderr.read()
+        logger.error("Unmount ownCloud in webfolder " + user.user_name + ": " + error)
         return not WebFolder.is_mounted(user)
     
     
