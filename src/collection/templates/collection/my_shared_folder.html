@@ -53,9 +53,10 @@
 			  <select name="operation">
 			  	{% if owncloud.is_mounted %}
 					<option value="owncloud:unmount">unmount</option>
+                {% else %}
+				    <option value="owncloud:mount">mount owncloud</option>
+				    <option value="remove">remove from webfolder</option>
 				{% endif %}
-				<option value="owncloud:mount">mount owncloud</option>
-				<option value="remove">remove from webfolder</option>
 			  </select>
 		 	  <button type="submit" value="OK">OK</button>
 		 	  {# Extra parameters #}
