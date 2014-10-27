@@ -44,4 +44,7 @@ urlpatterns = patterns('',
     # Documentation
     url(r'^doc/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root':os.path.join(SRC_DIR, 'documentation/build/html')}),
+                       
+    # Progress
+    url(r'^progress/(?P<action>.+)/(?P<task_id>[\w-]+)/$', 'progress.views.update_progress', name='progress'),
 )

@@ -2,7 +2,7 @@ from __future__ import division
 from django.db import models, IntegrityError
 from django.db.models import Max
 from django.core.exceptions import ObjectDoesNotExist
-import os, utils.path, utils.hash, re, sys, datetime, subprocess
+import os, utils.path, utils.hash, re, sys
 import shutil, ConfigParser
 from chiara.settings.common import WEBDAV_DIR, COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE, COLLECTION_TRAITS_FILE, REPOSITORY_DIR, BASH_DIR
 from chiara.settings.local import PUBLIC_USER, OWNCLOUD_DIR_NAME
@@ -12,11 +12,13 @@ from utils import enum
 import utils.date
 from collection import info
 from exception.exceptions import *
-
+from progress.models import Progress, start_progress, update_progress
 
 import logging
 logger = logging.getLogger(__name__)
-    
+
+
+
 class Collection(models.Model):
     """The Collection model represent a collection of directories
     and files. It contains a root directory with the name, revision
@@ -172,6 +174,7 @@ class Collection(models.Model):
                              size=WebFolder.get_dir_size(user, rel_path))
         root_dir.save()
         info.create_traits(user, rel_path, root_dir.identifier, 1)
+        root_dir.size = WebFolder.get_dir_size(user, rel_path)
         root_dir.save_recursive(user, rel_path)
         root_dir.save()
         
@@ -230,6 +233,8 @@ class Collection(models.Model):
                                  size=WebFolder.get_dir_size(user, rel_path))
             root_dir.save()
             info.create_traits(user, rel_path, root_dir.identifier, root_dir.revision)
+            root_dir.size = WebFolder.get_dir_size(user, rel_path)
+            root_dir.save()
             root_dir.push_recursive(user, rel_path, prev_col.directory)
             
             if root_dir.hash == prev_col.directory.hash:
@@ -273,27 +278,41 @@ class Collection(models.Model):
         else:
             raise NotNewestRevisionException()
         
-            
-    def download(self, user, rel_path):
+    
+    def download(self, user, rel_path, task_id):
         """Download the collection into the given directory of the user's webfolder."""
+        # start progress
+        data = {'current' : 0,
+                'total' : self.directory.size               
+                }
+        start_progress(task_id, data)
+        
         # copy files into the webfolder
         rel_dir_path = os.path.join(rel_path, self.directory.name)
+        progress = Progress(task_id, self, rel_dir_path)
         WebFolder.remove_dir_recursive(user, rel_dir_path)
         WebFolder.create_directory(user, rel_dir_path)
-        self.directory.download_recursive(user, rel_dir_path)
+        self.directory.download_recursive(user, rel_dir_path, progress)
         # Set user subscription
         subscription = Subscription(collection=self,
                                     user=user)
         subscription.save()
 
     
-    def download_public(self, rel_path):
-        """Download the collection into the given directory of the user's webfolder."""
-        # copy files into the webfolder
+    def download_public(self, rel_path, task_id):
+        """Download the collection into the given directory of the public folder."""
+        # start progress
+        data = {'current' : 0,
+                'total' : self.directory.size               
+                }
+        start_progress(task_id, data)
+        
+        # copy files into the public folder
         rel_dir_path = os.path.join(rel_path, self.directory.name)
+        progress = Progress(task_id, self, rel_dir_path)
         PublicFolder.remove_dir_recursive(rel_dir_path)
         PublicFolder.create_directory(rel_dir_path)
-        self.directory.download_recursive_public(rel_dir_path)
+        self.directory.download_recursive_public(rel_dir_path, progress)
     
 
     def unsubscribe(self, user):
@@ -435,7 +454,7 @@ class Directory(models.Model):
  
     def is_root(self):
         """Check if this directory is the root directory."""
-        return len(self.parent_directory.all())==0
+        return len(self.parent_directories.all())==0
  
         
     def save_recursive(self, user, rel_path):
@@ -548,30 +567,42 @@ class Directory(models.Model):
         self.save()
                 
  
-    def download_recursive(self, user, rel_path):
+    def download_recursive(self, user, rel_path, progress):
         """Download all subdirectories and files of this directory."""
         # download files
         for f in self.files.all():
             WebFolder.copy_file_to_webfolder(user, WebFolder.get_repository_file_name(f.identifier, f.revision), 
                                              os.path.join(rel_path, f.name))
+            # update progress
+            data = {'current' : WebFolder.get_dir_size(user, progress.rel_path),
+                    'total' : progress.collection.directory.size             
+                    }
+            update_progress(progress.task_id, data)
+            
         # download directories
         for d in self.sub_directories.all():
             rel_dir_path = os.path.join(rel_path, d.name)
             WebFolder.create_directory(user, rel_dir_path)
-            d.download_recursive(user, rel_dir_path)
+            d.download_recursive(user, rel_dir_path, progress)
 
     
-    def download_recursive_public(self, rel_path):
+    def download_recursive_public(self, rel_path, progress):
         """Download all subdirectories and files of this directory."""
         # download files
         for f in self.files.all():
             PublicFolder.copy_file_to_public_folder(PublicFolder.get_repository_file_name(f.identifier, f.revision), 
                                              os.path.join(rel_path, f.name))
+            # update progress
+            data = {'current' : PublicFolder.get_dir_size(progress.rel_path),
+                    'total' : progress.collection.directory.size             
+                    }
+            update_progress(progress.task_id, data)
+        
         # download directories
         for d in self.sub_directories.all():
             rel_dir_path = os.path.join(rel_path, d.name)
             PublicFolder.create_directory(rel_dir_path)
-            d.download_recursive_public(rel_dir_path)
+            d.download_recursive_public(rel_dir_path, progress)
                        
 
     def save(self, *args, **kwargs):

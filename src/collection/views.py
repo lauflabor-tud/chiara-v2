@@ -1,15 +1,17 @@
 import logging
 import mimetypes
-import os, sys, utils.path, utils.units, urllib
+import os, sys, utils.path, utils.units
 
 from django.contrib.auth.decorators import permission_required
 from django.core.servers.basehttp import FileWrapper
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django import forms
+from django.core.urlresolvers import reverse
 
 from collection.models import Collection, WebFolder, PublicFolder
-from authentication.models import User, UserPermission, Group, GroupPermission
+from collection import tasks
+from authentication.models import User, Group
 from exception.exceptions import *
 from utils import enum 
 from chiara.settings.local import OWNCLOUD_DIR_NAME
@@ -183,11 +185,13 @@ def operations(request):
     # pull collection
     elif post["operation"]=="pull":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=post["revision"])
-        if request.user.is_anonymous():
-            collection.download_public(os.path.dirname(utils.path.left_slash(utils.path.url_decode(post["rel_dir_path"]))))
-        else:
-            collection.download(request.user, os.path.dirname(utils.path.left_slash(utils.path.url_decode(post["rel_dir_path"]))))
         message = "You have successfully updated the collection '" + collection.directory.name + "' to revision " + str(collection.revision) + "!"
+        rel_path = os.path.dirname(utils.path.left_slash(utils.path.url_decode(post["rel_dir_path"])))
+        if request.user.is_anonymous():
+            result = tasks.download_public.delay(col_id=post["dir_id"], col_rev=post["revision"], rel_path=rel_path, message=message)
+        else:
+            result = tasks.download.delay(col_id=post["dir_id"], col_rev=post["revision"], user_id=request.user.id, rel_path=rel_path, message=message)
+        return HttpResponseRedirect(reverse('progress', args=('pull collection', result.task_id)))
     # subscribe collection
     elif post["operation"]=="subscribe":
         logger.debug(post["dir_id"])
@@ -199,18 +203,16 @@ def operations(request):
     elif post["operation"]=="subscribe_download":
         rel_path = utils.path.left_slash(utils.path.url_decode(post["rel_dir_path"]))
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
-        collection = collection.get_revision(sys.maxint)
-        collection.download(request.user, rel_path)
         message = "You have successfully subscribed the collection '"  + collection.name + "' and downloaded it into the directory '" + rel_path + "'!"
+        result = tasks.download.delay(col_id=post["dir_id"], user_id=request.user.id, rel_path=rel_path, message=message)
+        return HttpResponseRedirect(reverse('progress', args=('subscribe & download collection', result.task_id)))
     elif post["operation"]=="download":
         rel_path = utils.path.left_slash(utils.path.url_decode(post["rel_dir_path"]))
-        collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
-        collection = collection.get_revision(sys.maxint)
         if request.user.is_anonymous():
-            collection.download_public(rel_path)
+            result = tasks.download_public.delay(col_id=post["dir_id"], rel_path=rel_path)
         else:
-            collection.download(request.user, rel_path)
-        message = "You have successfully downloaded the collection '"  + collection.name + "' into the directory '" + rel_path + "'!"
+            result = tasks.download.delay(col_id=post["dir_id"], user_id=request.user.id, rel_path=rel_path)
+        return HttpResponseRedirect(reverse('progress', args=('download collection', result.task_id)))
     elif post["operation"]=="permissions":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         t = TemplateResponse(request, 'collection/manage_permissions.html',

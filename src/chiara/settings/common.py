@@ -30,7 +30,6 @@ SECRET_KEY = '-#1skj4pqxma2-=gl*#uz5jw2nir7u=jv4c(nit79txww9(gel'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 TEMPLATE_DEBUG = True
 
 ALLOWED_HOSTS = []
@@ -45,12 +44,17 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    'south',
+    'djcelery',
+    'djkombu',
+    'omnibus',
+    
+    'progress',
     'authentication',
     'collection',
     'log',
     'lib',
-    #'treebeard',
-    'south',
 )
 
 # Template path
@@ -76,6 +80,23 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'chiara.urls'
 
 WSGI_APPLICATION = 'chiara.wsgi.application'
+
+
+# Celery
+BROKER_URL = 'django://'
+CELERY_RESULT_BACKEND='djcelery.backends.database:DatabaseBackend'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+#CELERY_IMPORTS = ('collection.models', )
+
+
+# Websocket
+OMNIBUS_ENDPOINT_SCHEME = 'ws'
+OMNIBUS_SERVER_HOST = 'localhost'
+OMNIBUS_SERVER_PORT = '4242'
+OMNIBUS_WEBAPP_FACTORY = 'omnibus.factories.websocket_webapp_factory'
+OMNIBUS_CONNECTION_FACTORY = 'omnibus.factories.websocket_connection_factory'
 
 
 # Internationalization
