@@ -17,18 +17,21 @@
 			
 			var progressChannel = connection.openChannel('progress{{ task_id }}');
 			
-			progressChannel.on('update', function(event) {
-			    document.getElementById("currentstate").innerHTML = event.data.payload.current + " of " + event.data.payload.total + " Bytes";
-			    document.getElementById("progressbar").style.width = event.data.payload.progress + "%";
-			    if(event.data.payload.error != null) {
-			    	document.getElementById("progress").style.display = "none";
-			    	document.getElementById("error").innerHTML = event.data.payload.message;
-			    }
-			    if(event.data.payload.finish != null) {
-			    	document.getElementById("progress").style.display = "none";
-			    	document.getElementById("info").innerHTML = event.data.payload.message;
-			    }
-			});
+			progressChannel
+				.on('update', function(event) {
+				    document.getElementById("state").innerHTML = event.data.payload.current + " of " + event.data.payload.total + " Bytes";
+				    document.getElementById("current").innerHTML = event.data.payload.current_pos;
+				    document.getElementById("progressbar").style.width = event.data.payload.progress + "%";
+				})
+				.on('info', function(event) {
+					document.getElementById("progress").style.display = "none";
+				    document.getElementById("info").innerHTML = event.data.payload.message;
+				})
+				.on('error', function(event) {
+					document.getElementById("progress").style.display = "none";
+				    document.getElementById("error").innerHTML = event.data.payload.message;
+				});
+			
 		})();
 	</script>
 {% endblock %}
@@ -39,7 +42,10 @@
 	  	  <td class="description"> Action: <span class="normal_text"> {{ action }} </span></td>
 	    </tr>
 	    <tr>
-	      <td class="description"> State: <span id="currentstate" class="normal_text"> Loading... </span></td>
+	      <td class="description"> State: <span id="state" class="normal_text"> Loading... </span></td>
+	    </tr>
+	    <tr>
+	      <td class="description"> Current: <span id="current" class="normal_text"> </span></td>
 	    </tr>
 	    <tr>
 	      <td>

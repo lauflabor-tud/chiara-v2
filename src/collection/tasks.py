@@ -3,7 +3,7 @@ from .models import Collection
 from authentication.models import User
 import sys
 
-from progress.models import update_progress
+from progress.models import ProgressParam, info_progress
 
 import logging
 logger = logging.getLogger(__name__)
@@ -20,15 +20,11 @@ def download(self, user_id, rel_path, col_id, col_rev=None, message=None):
     
     collection.download(user, rel_path, self.request.id)
     
-    # update progress
+    # info progress
     if message is None:
         message = "You have successfully downloaded the collection '"  + collection.name + "' into the directory '" + rel_path + "'!"    
-    data = {'current' : collection.directory.size,
-            'total' : collection.directory.size,
-            'finish' : 'true',
-            'message' : message
-            }
-    update_progress(self.request.id, data)
+    data = {ProgressParam.MESSAGE : message}
+    info_progress(self.request.id, data)
     
     return 'done'
 
@@ -43,14 +39,11 @@ def download_public(self, rel_path, col_id, col_rev=None, message=None):
     
     collection.download_public(rel_path, self.request.id)
         
-    # update progress
+    # info progress
     if message is None:
         message = "You have successfully downloaded the collection '"  + collection.name + "' into the directory '" + rel_path + "'!"    
-    data = {'current' : collection.directory.size,
-            'total' : collection.directory.size,
-            'finish' : 'true',
-            'message' : message
-            }
-    update_progress(self.request.id, data)
+    data = {ProgressParam.MESSAGE : message}
+    info_progress(self.request.id, data)
     
     return 'done'
+

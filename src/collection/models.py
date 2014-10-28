@@ -12,7 +12,7 @@ from utils import enum
 import utils.date
 from collection import info
 from exception.exceptions import *
-from progress.models import Progress, start_progress, update_progress
+from progress.models import Progress, ProgressParam, start_progress, update_progress
 
 import logging
 logger = logging.getLogger(__name__)
@@ -282,9 +282,7 @@ class Collection(models.Model):
     def download(self, user, rel_path, task_id):
         """Download the collection into the given directory of the user's webfolder."""
         # start progress
-        data = {'current' : 0,
-                'total' : self.directory.size               
-                }
+        data = {ProgressParam.TOTAL : self.directory.size}
         start_progress(task_id, data)
         
         # copy files into the webfolder
@@ -302,9 +300,7 @@ class Collection(models.Model):
     def download_public(self, rel_path, task_id):
         """Download the collection into the given directory of the public folder."""
         # start progress
-        data = {'current' : 0,
-                'total' : self.directory.size               
-                }
+        data = {ProgressParam.TOTAL : self.directory.size}
         start_progress(task_id, data)
         
         # copy files into the public folder
@@ -574,8 +570,9 @@ class Directory(models.Model):
             WebFolder.copy_file_to_webfolder(user, WebFolder.get_repository_file_name(f.identifier, f.revision), 
                                              os.path.join(rel_path, f.name))
             # update progress
-            data = {'current' : WebFolder.get_dir_size(user, progress.rel_path),
-                    'total' : progress.collection.directory.size             
+            data = {ProgressParam.CURRENT : WebFolder.get_dir_size(user, progress.rel_path),
+                    ProgressParam.TOTAL : progress.collection.directory.size,
+                    ProgressParam.CURRENT_POS: os.path.join(rel_path, f.name)
                     }
             update_progress(progress.task_id, data)
             
@@ -593,8 +590,9 @@ class Directory(models.Model):
             PublicFolder.copy_file_to_public_folder(PublicFolder.get_repository_file_name(f.identifier, f.revision), 
                                              os.path.join(rel_path, f.name))
             # update progress
-            data = {'current' : PublicFolder.get_dir_size(progress.rel_path),
-                    'total' : progress.collection.directory.size             
+            data = {ProgressParam.CURRENT : PublicFolder.get_dir_size(progress.rel_path),
+                    ProgressParam.TOTAL : progress.collection.directory.size,
+                    ProgressParam.CURRENT_POS: os.path.join(rel_path, f.name)          
                     }
             update_progress(progress.task_id, data)
         

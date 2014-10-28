@@ -6,3 +6,6 @@ MySQL-python==1.2.4
 south==0.8.4
 fabric==1.8.1
 django-split-settings==0.1.1
+django-celery==3.1.16
+django-kombu==0.9.4
+django-omnibus==0.1.0
