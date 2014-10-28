@@ -19,9 +19,14 @@
 			
 			progressChannel
 				.on('update', function(event) {
-				    document.getElementById("state").innerHTML = event.data.payload.current + " of " + event.data.payload.total + " Bytes";
+					if(event.data.payload.current > event.data.payload.total) {
+					    document.getElementById("state").innerHTML = event.data.payload.total + " of " + event.data.payload.total + " Bytes";
+					    document.getElementById("progressbar").style.width = "100%";
+					} else {
+					    document.getElementById("state").innerHTML = event.data.payload.current + " of " + event.data.payload.total + " Bytes";
+					    document.getElementById("progressbar").style.width = event.data.payload.progress + "%";
+					}
 				    document.getElementById("current").innerHTML = event.data.payload.current_pos;
-				    document.getElementById("progressbar").style.width = event.data.payload.progress + "%";
 				})
 				.on('info', function(event) {
 					document.getElementById("progress").style.display = "none";

@@ -12,7 +12,7 @@ from utils import enum
 import utils.date
 from collection import info
 from exception.exceptions import *
-from progress.models import Progress, ProgressParam, start_progress, update_progress
+from progress.models import ProgressBackend, ProgressParam, start_progress, update_progress
 
 import logging
 logger = logging.getLogger(__name__)
@@ -159,10 +159,19 @@ class Collection(models.Model):
         return collections
                 
     
-    def add_to_collection(self, user, rel_path):
+    def add_to_collection(self, user, rel_path, task_id):
         """Adds the given user directory to collection repository 
         with all subdirectories and files. Also sets the user permission
         and subscription."""
+
+        # start progress
+        data = {ProgressParam.REL_PATH: rel_path,
+                ProgressParam.CURRENT: 0,
+                ProgressParam.CURRENT_POS: "",
+                ProgressParam.TOTAL : WebFolder.get_dir_size(user, rel_path)}
+        ProgressBackend.get_backend().set_data(task_id, data)
+        start_progress(task_id, data)
+        
         # read description file
         desc_parser = info.parse_description(user, rel_path)
         
@@ -175,7 +184,7 @@ class Collection(models.Model):
         root_dir.save()
         info.create_traits(user, rel_path, root_dir.identifier, 1)
         root_dir.size = WebFolder.get_dir_size(user, rel_path)
-        root_dir.save_recursive(user, rel_path)
+        root_dir.save_recursive(user, rel_path, task_id)
         root_dir.save()
         
         # Set collection attributes
@@ -214,8 +223,16 @@ class Collection(models.Model):
         news.save()
 
     
-    def push_local_revision(self, user, rel_path, prev_col, comment):
+    def push_local_revision(self, user, rel_path, prev_col, comment, task_id):
         """Push the local revision to the repository."""
+        
+        # start progress
+        data = {ProgressParam.REL_PATH: rel_path,
+                ProgressParam.CURRENT: 0,
+                ProgressParam.CURRENT_POS: "",
+                ProgressParam.TOTAL : WebFolder.get_dir_size(user, rel_path)}
+        ProgressBackend.get_backend().set_data(task_id, data)
+        start_progress(task_id, data)
         
         prev_max_revision = Collection.objects.filter(identifier=prev_col.identifier).aggregate(Max('revision'))['revision__max']
         
@@ -235,7 +252,7 @@ class Collection(models.Model):
             info.create_traits(user, rel_path, root_dir.identifier, root_dir.revision)
             root_dir.size = WebFolder.get_dir_size(user, rel_path)
             root_dir.save()
-            root_dir.push_recursive(user, rel_path, prev_col.directory)
+            root_dir.push_recursive(user, rel_path, prev_col.directory, task_id)
             
             if root_dir.hash == prev_col.directory.hash:
                 root_dir.delete()
@@ -282,15 +299,18 @@ class Collection(models.Model):
     def download(self, user, rel_path, task_id):
         """Download the collection into the given directory of the user's webfolder."""
         # start progress
-        data = {ProgressParam.TOTAL : self.directory.size}
-        start_progress(task_id, data)
-        
-        # copy files into the webfolder
         rel_dir_path = os.path.join(rel_path, self.directory.name)
-        progress = Progress(task_id, self, rel_dir_path)
+        data = {ProgressParam.REL_PATH: rel_dir_path,
+                ProgressParam.CURRENT: 0,
+                ProgressParam.CURRENT_POS: "",
+                ProgressParam.TOTAL: self.directory.size}
+        ProgressBackend.get_backend().set_data(task_id, data)
+        start_progress(task_id, data)
+               
+        # copy files into the webfolder
         WebFolder.remove_dir_recursive(user, rel_dir_path)
         WebFolder.create_directory(user, rel_dir_path)
-        self.directory.download_recursive(user, rel_dir_path, progress)
+        self.directory.download_recursive(user, rel_dir_path, task_id)
         # Set user subscription
         subscription = Subscription(collection=self,
                                     user=user)
@@ -300,15 +320,18 @@ class Collection(models.Model):
     def download_public(self, rel_path, task_id):
         """Download the collection into the given directory of the public folder."""
         # start progress
-        data = {ProgressParam.TOTAL : self.directory.size}
+        rel_dir_path = os.path.join(rel_path, self.directory.name)
+        data = {ProgressParam.REL_PATH: rel_dir_path,
+                ProgressParam.CURRENT: 0,
+                ProgressParam.CURRENT_POS: "",
+                ProgressParam.TOTAL : self.directory.size}
+        ProgressBackend.get_backend().set_data(task_id, data)
         start_progress(task_id, data)
         
         # copy files into the public folder
-        rel_dir_path = os.path.join(rel_path, self.directory.name)
-        progress = Progress(task_id, self, rel_dir_path)
         PublicFolder.remove_dir_recursive(rel_dir_path)
         PublicFolder.create_directory(rel_dir_path)
-        self.directory.download_recursive_public(rel_dir_path, progress)
+        self.directory.download_recursive_public(rel_dir_path, task_id)
     
 
     def unsubscribe(self, user):
@@ -453,7 +476,7 @@ class Directory(models.Model):
         return len(self.parent_directories.all())==0
  
         
-    def save_recursive(self, user, rel_path):
+    def save_recursive(self, user, rel_path, task_id):
         """Save all subdirectories and files of this directory and 
         create connections to this directory."""
         item_hashs = []
@@ -471,6 +494,13 @@ class Directory(models.Model):
                 WebFolder.copy_file_to_repository(user, rel_item_path, WebFolder.get_repository_file_name(f.identifier, f.revision))
                 self.files.add(f)
                 item_hashs.append(f.hash)
+                
+                # update progress
+                data = ProgressBackend.get_backend().get_data(task_id)
+                data[ProgressParam.CURRENT] = data[ProgressParam.CURRENT] + f.size
+                data[ProgressParam.CURRENT_POS] = rel_item_path
+                ProgressBackend.get_backend().set_data(task_id, data)
+                update_progress(task_id, data)
             elif WebFolder.is_dir(user, rel_item_path):
                 d = Directory(revision=1,
                               name=item,
@@ -478,7 +508,7 @@ class Directory(models.Model):
                               size=WebFolder.get_dir_size(user, rel_item_path))
                 
                 d.save()
-                d.save_recursive(user, rel_item_path)
+                d.save_recursive(user, rel_item_path, task_id)
                 self.sub_directories.add(d)
                 item_hashs.append(d.hash)
         # Set directory hash
@@ -486,7 +516,7 @@ class Directory(models.Model):
         self.save()
     
     
-    def push_recursive(self, user, rel_path, prev_dir):
+    def push_recursive(self, user, rel_path, prev_dir, task_id):
         """Push the local changes of this directory as a new revision."""
         
         item_hashs = []
@@ -525,6 +555,13 @@ class Directory(models.Model):
                     else:
                         self.files.add(prev_f[0])
                         item_hashs.append(prev_f[0].hash)
+                        
+                # update progress
+                data = ProgressBackend.get_backend().get_data(task_id)
+                data[ProgressParam.CURRENT] = data[ProgressParam.CURRENT] + f.size
+                data[ProgressParam.CURRENT_POS] = rel_item_path
+                ProgressBackend.get_backend().set_data(task_id, data)
+                update_progress(task_id, data)
                 
             # item is a directory
             elif WebFolder.is_dir(user, rel_item_path):
@@ -537,7 +574,7 @@ class Directory(models.Model):
                                   size=WebFolder.get_dir_size(user, rel_item_path))
                     d.save()
                     self.sub_directories.add(d)
-                    d.save_recursive(user, rel_item_path)
+                    d.save_recursive(user, rel_item_path, task_id)
                     item_hashs.append(d.hash)
                 # directory is not new
                 else:
@@ -547,7 +584,7 @@ class Directory(models.Model):
                                   user_modified=user,
                                   size=WebFolder.get_dir_size(user, rel_item_path))
                     d.save()
-                    d.push_recursive(user, rel_item_path, prev_d[0])
+                    d.push_recursive(user, rel_item_path, prev_d[0], task_id)
                     # directory was modified
                     if not prev_d[0].hash == d.hash:
                         self.sub_directories.add(d)
@@ -563,44 +600,44 @@ class Directory(models.Model):
         self.save()
                 
  
-    def download_recursive(self, user, rel_path, progress):
+    def download_recursive(self, user, rel_path, task_id):
         """Download all subdirectories and files of this directory."""
         # download files
         for f in self.files.all():
             WebFolder.copy_file_to_webfolder(user, WebFolder.get_repository_file_name(f.identifier, f.revision), 
                                              os.path.join(rel_path, f.name))
             # update progress
-            data = {ProgressParam.CURRENT : WebFolder.get_dir_size(user, progress.rel_path),
-                    ProgressParam.TOTAL : progress.collection.directory.size,
-                    ProgressParam.CURRENT_POS: os.path.join(rel_path, f.name)
-                    }
-            update_progress(progress.task_id, data)
+            data = ProgressBackend.get_backend().get_data(task_id)
+            data[ProgressParam.CURRENT] = WebFolder.get_dir_size(user, data[ProgressParam.REL_PATH])
+            data[ProgressParam.CURRENT_POS] = os.path.join(rel_path, f.name)
+            ProgressBackend.get_backend().set_data(task_id, data)
+            update_progress(task_id, data)
             
         # download directories
         for d in self.sub_directories.all():
             rel_dir_path = os.path.join(rel_path, d.name)
             WebFolder.create_directory(user, rel_dir_path)
-            d.download_recursive(user, rel_dir_path, progress)
+            d.download_recursive(user, rel_dir_path, task_id)
 
     
-    def download_recursive_public(self, rel_path, progress):
+    def download_recursive_public(self, rel_path, task_id):
         """Download all subdirectories and files of this directory."""
         # download files
         for f in self.files.all():
             PublicFolder.copy_file_to_public_folder(PublicFolder.get_repository_file_name(f.identifier, f.revision), 
                                              os.path.join(rel_path, f.name))
             # update progress
-            data = {ProgressParam.CURRENT : PublicFolder.get_dir_size(progress.rel_path),
-                    ProgressParam.TOTAL : progress.collection.directory.size,
-                    ProgressParam.CURRENT_POS: os.path.join(rel_path, f.name)          
-                    }
-            update_progress(progress.task_id, data)
+            data = ProgressBackend.get_backend().get_data(task_id)
+            data[ProgressParam.CURRENT] = PublicFolder.get_dir_size(data[ProgressParam.REL_PATH])
+            data[ProgressParam.CURRENT_POS] = os.path.join(rel_path, f.name)
+            ProgressBackend.get_backend().set_data(task_id, data)
+            update_progress(task_id, data)
         
         # download directories
         for d in self.sub_directories.all():
             rel_dir_path = os.path.join(rel_path, d.name)
             PublicFolder.create_directory(rel_dir_path)
-            d.download_recursive_public(rel_dir_path, progress)
+            d.download_recursive_public(rel_dir_path, task_id)
                        
 
     def save(self, *args, **kwargs):

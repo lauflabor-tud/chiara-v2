@@ -1,24 +1,17 @@
+from celery import current_app
+from celery.result import AsyncResult
 from omnibus.api import publish
 import time
 
+import logging
+logger = logging.getLogger(__name__)
 
-class Progress():
-    def __init__(self, task_id, collection, rel_path):
-        self.task_id = task_id
-        self.collection = collection
-        self.rel_path = rel_path
-
-
-class ProgressParam():
-    TOTAL = 'total'
-    CURRENT = 'current'
-    CURRENT_POS = 'current_pos'
-    MESSAGE = 'message'
-    
 
 def start_progress(task_id, data):
+    # set current state to zero
     data[ProgressParam.CURRENT] = 0
     data[ProgressParam.CURRENT_POS] = ''
+    # update progress
     for _ in range(1, 5):
         update_progress(task_id, data)
         time.sleep(0.2);
@@ -30,8 +23,11 @@ def update_progress(task_id, data):
     
     current = data.get(ProgressParam.CURRENT)
     total = data.get(ProgressParam.TOTAL)
-    progress = ((current*10000)/total) / 100.0
-
+    if total==0:
+        progress = 0
+    else:
+        progress = ((current*10000)/total) / 100.0
+        
     publish(
         channel,
         event,
@@ -67,7 +63,44 @@ def error_progress(task_id, data):
         {ProgressParam.MESSAGE : data.get(ProgressParam.MESSAGE)},
         sender='server'
     )
+
+
+
+class ProgressParam():
+    REL_PATH = "rel_path"
     
+    TOTAL = 'total'
+    CURRENT = 'current'
+    CURRENT_POS = 'current_pos'
+    MESSAGE = 'message'
     
+
+class ProgressBackend(object):
     
+    _BACKEND = None
+    
+    progress_state = 'PROGRESS'
+
+    @classmethod
+    def get_backend(cls):
+        if cls._BACKEND is None:
+            cls._BACKEND = ProgressBackend()
+        return cls._BACKEND
+    
+
+    def __init__(self):
+        self.app = current_app
+
+    def set_data(self, task_id, data):
+        self.app.backend.store_result(task_id, data, self.progress_state)
+    
+    def update_data(self, task_id, data):
+        updated_data = self.get_data(task_id)
+        for k,v in data.iteritems():
+            print k, v
+            updated_data[k] = v
+        self.app.backend.store_result(task_id, updated_data, self.progress_state)
+    
+    def get_data(self, task_id):
+        return AsyncResult(task_id).info
     

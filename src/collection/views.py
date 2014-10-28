@@ -151,30 +151,21 @@ def operations(request):
             message = "You have successfully removed the directory '" + utils.path.url_decode(post["rel_dir_path"]) + "' from your webfolder!"
     # add to repository
     elif post["operation"]=="add":
-        try:
-            collection = Collection()
-            collection.add_to_collection(request.user, utils.path.url_decode(post["rel_dir_path"]))
-            message = "You have successfully add the directory '" + utils.path.url_decode(post["rel_dir_path"]) + "' to the repository!"
-        except MissingDescriptionFileException:
-            message = "No description file found!"
-            error = True
+        result = tasks.add_to_collection.delay(user_id=request.user.id, 
+                                               rel_path=utils.path.url_decode(post["rel_dir_path"]))
+        return HttpResponseRedirect(reverse('progress', args=('add to collection', result.task_id)))
     # show commit view for pushing
     elif post["operation"]=="push:commit":
         t = TemplateResponse(request, 'collection/push_commit.html')
         return HttpResponse(t.render())
     # push collection
-    elif post["operation"]=="push": 
-        try:
-            prev_col = Collection.objects.get(identifier=post["dir_id"], revision=post["dir_revision"])
-            collection = Collection()
-            collection.push_local_revision(request.user, utils.path.url_decode(post["rel_dir_path"]), prev_col, post["comment"])
-            message = "You have successfully pushed the local revision of '" + collection.directory.name + "' to the repository!"
-        except NoLocalChangesException: 
-            message = "There are no local changes of this collection in your webfolder!"
-            error = True
-        except NotNewestRevisionException:
-            message = "You have to update to the newest revision of this collection before pushing a new one!"
-            error = True
+    elif post["operation"]=="push":
+        result = tasks.push_local_revision.delay(user_id=request.user.id, 
+                                                 rel_path=utils.path.url_decode(post["rel_dir_path"]), 
+                                                 col_id=post["dir_id"], 
+                                                 col_rev=post["dir_revision"], 
+                                                 comment=post["comment"])
+        return HttpResponseRedirect(reverse('progress', args=('push local revision', result.task_id)))
     # show revision view for pulling
     elif post["operation"]=="pull:choose_revision":
         collections = Collection.objects.filter(identifier=post["dir_id"])
@@ -191,7 +182,7 @@ def operations(request):
             result = tasks.download_public.delay(col_id=post["dir_id"], col_rev=post["revision"], rel_path=rel_path, message=message)
         else:
             result = tasks.download.delay(col_id=post["dir_id"], col_rev=post["revision"], user_id=request.user.id, rel_path=rel_path, message=message)
-        return HttpResponseRedirect(reverse('progress', args=('pull collection', result.task_id)))
+        return HttpResponseRedirect(reverse('progress', args=('update to revision', result.task_id)))
     # subscribe collection
     elif post["operation"]=="subscribe":
         logger.debug(post["dir_id"])
