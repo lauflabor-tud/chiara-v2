@@ -1,4 +1,4 @@
-from django.http import HttpResponse, Http404
+from django.http import StreamingHttpResponse, Http404
 from django.template.response import TemplateResponse
 from django.contrib.auth.views import login as contrib_login, logout as contrib_logout
 from django.contrib.auth.views import password_change as contrib_password_change, password_change_done as contrib_password_change_done
@@ -12,7 +12,7 @@ def preferences(request):
         raise Http404
     t = TemplateResponse(request, 'authentication/preferences.html', 
                      {'collections': collections})
-    return HttpResponse(t.render())
+    return StreamingHttpResponse(t.render())
 
 
 def login(request):

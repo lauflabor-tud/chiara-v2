@@ -2,19 +2,20 @@ import logging
 import mimetypes
 import os, sys, utils.path, utils.units
 
+from django import forms
 from django.contrib.auth.decorators import permission_required
 from django.core.servers.basehttp import FileWrapper
-from django.http import HttpResponse, Http404, HttpResponseRedirect
-from django.template.response import TemplateResponse
-from django import forms
 from django.core.urlresolvers import reverse
+from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.http.response import StreamingHttpResponse
+from django.template.response import TemplateResponse
 
-from collection.models import Collection, WebFolder, PublicFolder
-from collection import tasks
 from authentication.models import User, Group
+from chiara.settings.local import OWNCLOUD_DIR_NAME
+from collection import tasks
+from collection.models import Collection, WebFolder, PublicFolder
 from exception.exceptions import *
 from utils import enum 
-from chiara.settings.local import OWNCLOUD_DIR_NAME
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ class OwncloudForm(forms.Form):
 
 def index(request):
     t = TemplateResponse(request, 'base.html', {})
-    return HttpResponse(t.render())
+    return StreamingHttpResponse(t.render())
 
 
 def public_folder(request, rel_path=''):
@@ -71,7 +72,7 @@ def public_folder(request, rel_path=''):
                           'rel_parent_path': utils.path.no_slash(os.path.dirname(rel_path)),
                           'dirs': dirs, 
                           'files': files})
-    return HttpResponse(t.render())
+    return StreamingHttpResponse(t.render())
 
 
 
@@ -129,7 +130,7 @@ def my_shared_folder(request, rel_path=''):
                           'dirs': dirs, 
                           'files': files,
                           'owncloud': owncloud})
-    return HttpResponse(t.render())
+    return StreamingHttpResponse(t.render())
 
 
 def operations(request):
@@ -157,7 +158,7 @@ def operations(request):
     # show commit view for pushing
     elif post["operation"]=="push:commit":
         t = TemplateResponse(request, 'collection/push_commit.html')
-        return HttpResponse(t.render())
+        return StreamingHttpResponse(t.render())
     # push collection
     elif post["operation"]=="push":
         result = tasks.push_local_revision.delay(user_id=request.user.id, 
@@ -172,7 +173,7 @@ def operations(request):
         t = TemplateResponse(request, 'collection/pull_choose_revision.html',
                              {'dir_name': post["dir_name"],
                               'collections': collections})
-        return HttpResponse(t.render())
+        return StreamingHttpResponse(t.render())
     # pull collection
     elif post["operation"]=="pull":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=post["revision"])
@@ -213,7 +214,7 @@ def operations(request):
                               'all_users': User.objects.all(),
                               'all_groups': Group.objects.all(),
                               'permission_choices': [k for (k,_) in utils.enum.Permission.CHOICES] })
-        return HttpResponse(t.render())
+        return StreamingHttpResponse(t.render())
     elif post["operation"]=="public_access":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         collection.update_public_access(bool(int(post["public"])))
@@ -224,7 +225,7 @@ def operations(request):
                               'all_users': User.objects.all(),
                               'all_groups': Group.objects.all(),
                               'permission_choices': [k for (k,_) in utils.enum.Permission.CHOICES] })
-        return HttpResponse(t.render())
+        return StreamingHttpResponse(t.render())
     elif post["operation"]=="user_read_access":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         user = User.objects.get(user_name=post["user_name"])
@@ -236,7 +237,7 @@ def operations(request):
                               'all_users': User.objects.all(),
                               'all_groups': Group.objects.all(),
                               'permission_choices': [k for (k,_) in utils.enum.Permission.CHOICES] })
-        return HttpResponse(t.render())
+        return StreamingHttpResponse(t.render())
     elif post["operation"]=="user_write_access":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         user = User.objects.get(user_name=post["user_name"])
@@ -248,7 +249,7 @@ def operations(request):
                               'all_users': User.objects.all(),
                               'all_groups': Group.objects.all(),
                               'permission_choices': [k for (k,_) in utils.enum.Permission.CHOICES] })
-        return HttpResponse(t.render())
+        return StreamingHttpResponse(t.render())
     elif post["operation"]=="user_remove_access":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         user = User.objects.get(user_name=post["user_name"])
@@ -260,7 +261,7 @@ def operations(request):
                               'all_users': User.objects.all(),
                               'all_groups': Group.objects.all(),
                               'permission_choices': [k for (k,_) in utils.enum.Permission.CHOICES] })
-        return HttpResponse(t.render())
+        return StreamingHttpResponse(t.render())
     elif post["operation"]=="group_read_access":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         group = Group.objects.get(group_name=post["group_name"])
@@ -272,7 +273,7 @@ def operations(request):
                               'all_users': User.objects.all(),
                               'all_groups': Group.objects.all(),
                               'permission_choices': [k for (k,_) in utils.enum.Permission.CHOICES] })
-        return HttpResponse(t.render())
+        return StreamingHttpResponse(t.render())
     elif post["operation"]=="group_write_access":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         group = Group.objects.get(group_name=post["group_name"])
@@ -284,7 +285,7 @@ def operations(request):
                               'all_users': User.objects.all(),
                               'all_groups': Group.objects.all(),
                               'permission_choices': [k for (k,_) in utils.enum.Permission.CHOICES] })
-        return HttpResponse(t.render())
+        return StreamingHttpResponse(t.render())
     elif post["operation"]=="group_remove_access":
         collection = Collection.objects.get(identifier=post["dir_id"], revision=1)
         group = Group.objects.get(group_name=post["group_name"])
@@ -296,7 +297,7 @@ def operations(request):
                               'all_users': User.objects.all(),
                               'all_groups': Group.objects.all(),
                               'permission_choices': [k for (k,_) in utils.enum.Permission.CHOICES] })
-        return HttpResponse(t.render())
+        return StreamingHttpResponse(t.render())
     elif post["operation"]=="owncloud:mount":
         return mount_owncloud(request)
     elif post["operation"]=="owncloud:unmount":
@@ -315,7 +316,7 @@ def operations(request):
     else:
         t = TemplateResponse(request, 'info.html', 
                              {'message': message})
-    return HttpResponse(t.render())
+    return StreamingHttpResponse(t.render())
 
 
 
@@ -335,7 +336,7 @@ def mount_owncloud(request):
                 message = "Mounting your ownCloud directory failed. Please try again!"
                 t = TemplateResponse(request, 'error.html',
                              {'message': message})
-            return HttpResponse(t.render())
+            return StreamingHttpResponse(t.render())
         else:
             # The supplied form contained errors - just print them to the terminal.
             print form.errors
@@ -344,7 +345,7 @@ def mount_owncloud(request):
         form = OwncloudForm()
     
     t = TemplateResponse(request, 'collection/mount_owncloud.html', {'form': form})
-    return HttpResponse(t.render())
+    return StreamingHttpResponse(t.render())
     
 
 def retrieve_new_collections(request):
@@ -398,7 +399,7 @@ def retrieve_new_collections(request):
                           'collections': collections,
                           'error_msg': error_msg,
                           'retrieve': retrieve})
-    return HttpResponse(t.render())
+    return StreamingHttpResponse(t.render())
 
 
 @permission_required('collection.manage_my_collections', login_url="/login/")
@@ -418,7 +419,7 @@ def manage_my_collections(request):
                 
     t = TemplateResponse(request, 'collection/manage_my_collections.html', 
                          {'collections': cols})
-    return HttpResponse(t.render())
+    return StreamingHttpResponse(t.render())
 
 
 def download_to_disk(request, rel_file_path):
@@ -430,7 +431,7 @@ def download_to_disk(request, rel_file_path):
     download_name =os.path.basename(abs_file_path)
     wrapper = FileWrapper(open(abs_file_path))
     content_type = mimetypes.guess_type(abs_file_path)[0]
-    response = HttpResponse(wrapper,content_type=content_type)
+    response = StreamingHttpResponse(wrapper,content_type=content_type)
     if request.user.is_anonymous():
         response['Content-Length'] = PublicFolder.get_file_size(rel_file_path)  
     else:
