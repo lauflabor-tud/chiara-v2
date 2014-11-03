@@ -9,10 +9,9 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 """
 
 import os
+from chiara.settings.local import SRC_DIR, SERVER_ADRESS
 
 # location of different directories
-SRC_DIR = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
-PROJECT_DIR = os.path.dirname(SRC_DIR)
 WEBDAV_DIR = os.path.join(SRC_DIR, 'webdav')
 REPOSITORY_DIR = os.path.join(SRC_DIR, 'repository')
 BASH_DIR = os.path.join(SRC_DIR, 'bash')
@@ -93,7 +92,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 
 # Websocket
 OMNIBUS_ENDPOINT_SCHEME = 'ws'
-OMNIBUS_SERVER_HOST = 'localhost'
+OMNIBUS_SERVER_HOST = SERVER_ADRESS
 OMNIBUS_SERVER_PORT = '4242'
 OMNIBUS_WEBAPP_FACTORY = 'omnibus.factories.websocket_webapp_factory'
 OMNIBUS_CONNECTION_FACTORY = 'omnibus.factories.websocket_connection_factory'

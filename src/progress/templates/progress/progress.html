@@ -11,7 +11,7 @@
 			// Select a transport implementation:
 			var transport = WebSocket; // SockJS can be used alternatively
 			// Receive the path for the connection from the django template context:
-			var endpoint = 'ws:\/\/localhost:4242\/ec'; // '{{ OMNIBUS_ENDPOINT }}';
+			var endpoint = '{{ omnibus_endpoint }}';
 			// Create a new connection using transport, endpoint and options
 			var connection = new Omnibus(transport, endpoint);
 			
