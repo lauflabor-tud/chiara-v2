@@ -26,7 +26,7 @@ Create superuser
 """
 
 
-main_apps = ['authentication', 'collection',]
+main_apps = ['progress', 'authentication', 'collection', 'log',]
 
 
 def refresh():
