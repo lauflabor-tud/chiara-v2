@@ -1,0 +1,20 @@
+### Abstract ###
+This collection is a short example to show how a collection can be look. 
+
+
+### Details ###
+The directory structure is as follows:
+
+img/
+    Contains all example pictures. Please insert only images in PNG.
+
+docs/
+    Contains all example documents.
+
+
+### Tags ###
+topic:			Documentation
+project:		Chiara
+authors: 		Dominik Reis
+creation_date:		08.2014		# Format: dd.mm.yyyy / mm.yyyy / yyyy
+keywords: 		doc, workflow

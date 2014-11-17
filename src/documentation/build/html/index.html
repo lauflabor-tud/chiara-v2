@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -15,7 +13,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -26,7 +24,8 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="Chiara 2.0 documentation" href="#" /> 
+    <link rel="top" title="Chiara 2.0 documentation" href="#" />
+    <link rel="next" title="How to use Chiara" href="use-of-chiara.html" /> 
   </head>
   <body>
     <div class="related">
@@ -35,6 +34,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="use-of-chiara.html" title="How to use Chiara"
+             accesskey="N">next</a> |</li>
         <li><a href="#">Chiara 2.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -48,7 +50,36 @@
 <h1>Welcome to Chiara&#8217;s documentation!<a class="headerlink" href="#welcome-to-chiara-s-documentation" title="Permalink to this headline">¶</a></h1>
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
-<ul class="simple">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="use-of-chiara.html">How to use Chiara</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="use-of-chiara.html#mount-your-webfolder-to-your-local-disk">Mount your webfolder to your local disk</a></li>
+<li class="toctree-l2"><a class="reference internal" href="use-of-chiara.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="use-of-chiara.html#interface-description">Interface description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="use-of-chiara.html#additional-information">Additional Information</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="setup-chiara.html">Setting up Chiara</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="setup-chiara.html#compatibility">Compatibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup-chiara.html#setup-per-remote-access">Setup per remote access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup-chiara.html#install-configure-apache">Install &amp; configure Apache</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup-chiara.html#install-configure-chiara">Install &amp; configure Chiara</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup-chiara.html#overview-implementation-of-chiara">Overview: Implementation of Chiara</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="designgoals.html">Design goals for Chiara</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="designgoals.html#approach">Approach</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="version.html">Version information</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="version.html#version-0-1-initial-release">Version 0.1 (initial release)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version.html#version-0-2-first-upgrade">Version 0.2 (first upgrade)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version.html#version-0-3">Version 0.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version.html#version-0-4">Version 0.4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version.html#version-1-0">Version 1.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version.html#version-2-0">Version 2.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="version.html#version-2-1">Version 2.1</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -69,12 +100,13 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Welcome to Chiara&#8217;s documentation!</a><ul>
-</ul>
-</li>
+<li><a class="reference internal" href="#">Welcome to Chiara&#8217;s documentation!</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 
+  <h4>Next topic</h4>
+  <p class="topless"><a href="use-of-chiara.html"
+                        title="next chapter">How to use Chiara</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/index.txt"
@@ -103,12 +135,15 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="use-of-chiara.html" title="How to use Chiara"
+             >next</a> |</li>
         <li><a href="#">Chiara 2.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2014, Moritz Maus &amp; Dominik Reis.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

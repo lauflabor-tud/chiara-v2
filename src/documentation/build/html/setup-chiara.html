@@ -1,0 +1,383 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Setting up Chiara &mdash; Chiara 2.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Chiara 2.0 documentation" href="index.html" />
+    <link rel="next" title="Design goals for Chiara" href="designgoals.html" />
+    <link rel="prev" title="How to use Chiara" href="use-of-chiara.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="designgoals.html" title="Design goals for Chiara"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="use-of-chiara.html" title="How to use Chiara"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Chiara 2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="setting-up-chiara">
+<h1><a class="toc-backref" href="#id1">Setting up Chiara</a><a class="headerlink" href="#setting-up-chiara" title="Permalink to this headline">¶</a></h1>
+<div class="sidebar">
+<p class="first sidebar-title">Questions?</p>
+<p class="sidebar-subtitle">Please contact us at:</p>
+<p class="last"><a class="reference external" href="mailto:mmaus&#37;&#52;&#48;sport&#46;tu-darmstadt&#46;de">mmaus<span>&#64;</span>sport<span>&#46;</span>tu-darmstadt<span>&#46;</span>de</a>
+<a class="reference external" href="mailto:dominik&#46;reis&#37;&#52;&#48;stud&#46;tu-darmstadt&#46;de">dominik<span>&#46;</span>reis<span>&#64;</span>stud<span>&#46;</span>tu-darmstadt<span>&#46;</span>de</a></p>
+</div>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#setting-up-chiara" id="id1">Setting up Chiara</a><ul>
+<li><a class="reference internal" href="#compatibility" id="id2">Compatibility</a></li>
+<li><a class="reference internal" href="#setup-per-remote-access" id="id3">Setup per remote access</a><ul>
+<li><a class="reference internal" href="#linux-mac-os-x" id="id4">Linux/Mac Os X</a></li>
+<li><a class="reference internal" href="#windows" id="id5">Windows</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#install-configure-apache" id="id6">Install &amp; configure Apache</a></li>
+<li><a class="reference internal" href="#install-configure-chiara" id="id7">Install &amp; configure Chiara</a><ul>
+<li><a class="reference internal" href="#install-requirements" id="id8">Install requirements</a></li>
+<li><a class="reference internal" href="#configure-chiara" id="id9">Configure Chiara</a></li>
+<li><a class="reference internal" href="#administration" id="id10">Administration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#overview-implementation-of-chiara" id="id11">Overview: Implementation of Chiara</a><ul>
+<li><a class="reference internal" href="#django" id="id12">Django</a></li>
+<li><a class="reference internal" href="#restructeredtext" id="id13">reStructeredText</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="compatibility">
+<h2><a class="toc-backref" href="#id2">Compatibility</a><a class="headerlink" href="#compatibility" title="Permalink to this headline">¶</a></h2>
+<p><em>Chiara</em> is only compatible with <em>Linux</em>. So you have to set up a Linux server.</p>
+</div>
+<div class="section" id="setup-per-remote-access">
+<h2><a class="toc-backref" href="#id3">Setup per remote access</a><a class="headerlink" href="#setup-per-remote-access" title="Permalink to this headline">¶</a></h2>
+<p>The following steps will show you what you need to do to configure Chiara on a server from somewhere else.</p>
+<div class="section" id="linux-mac-os-x">
+<h3><a class="toc-backref" href="#id4">Linux/Mac Os X</a><a class="headerlink" href="#linux-mac-os-x" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p class="first">Open <em>Terminal</em> and access to the server with <em>SSH</em> by typing:</p>
+<div class="highlight-python"><div class="highlight"><pre>ssh &lt;user&gt;@&lt;server-address&gt;
+</pre></div>
+</div>
+</li>
+<li><p class="first">Answer at the security warning with <strong>yes</strong>.</p>
+</li>
+<li><p class="first">Insert your password.</p>
+</li>
+<li><p class="first">Now you are logged on to the server.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="windows">
+<h3><a class="toc-backref" href="#id5">Windows</a><a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>Dowload <em>PuTTY</em> at <a class="reference external" href="http://www.putty.org/">http://www.putty.org/</a>.</li>
+<li>Run <em>putty.exe</em>.</li>
+<li>Fill-out the fields <strong>Host name (or IP address)</strong> and <strong>Port</strong>.</li>
+<li>Choose at connection type <strong>SSH</strong>.</li>
+<li><em>Optional:</em> If you want to save this configuration, you have to insert in the <strong>Saved Sessions</strong> field an arbitrary name and click <strong>Save</strong>.</li>
+<li>Click <strong>Open</strong>.</li>
+<li>When the <em>PuTTY Security Alert</em> Window opens, click <strong>Yes</strong>.</li>
+<li>Enter your username and password.</li>
+<li>Now you are logged on to the server.</li>
+</ol>
+</div>
+</div>
+<div class="section" id="install-configure-apache">
+<h2><a class="toc-backref" href="#id6">Install &amp; configure Apache</a><a class="headerlink" href="#install-configure-apache" title="Permalink to this headline">¶</a></h2>
+<p>The following description is for distributions based on <em>Debian</em>. You have to execute all commands with <strong>sudo</strong>.</p>
+<ol class="arabic">
+<li><p class="first">Install <em>Apache</em>.</p>
+<div class="highlight-python"><div class="highlight"><pre>apt-get install apache2
+</pre></div>
+</div>
+</li>
+<li><p class="first">Install <em>wsgi</em> package for connecting <em>Apache</em> with <em>Django</em>.</p>
+<div class="highlight-python"><div class="highlight"><pre>apt-get install libapache2-mod-wsgi
+</pre></div>
+</div>
+</li>
+<li><p class="first">Enable necessary modules.</p>
+<div class="highlight-python"><div class="highlight"><pre>a2enmod wsgi dav dav_fs auth_digest
+</pre></div>
+</div>
+</li>
+</ol>
+<ol class="arabic" id="chiara-conf" start="4">
+<li><p class="first">Navigate to <em>/etc/apache2/sites-available</em> and create a chiara configuration file like this: <a class="reference download internal" href="_downloads/chiara.conf"><tt class="xref download docutils literal"><span class="pre">chiara.conf</span></tt></a></p>
+</li>
+<li><p class="first">Link this file to <em>sites-enabled</em> and use <em>a2ensite &lt;sitename&gt;</em> to enable the website.</p>
+<div class="highlight-python"><div class="highlight"><pre>ln -s /etc/apache2/sites-available/chiara /etc/apache2/sites-enabled/chiara
+
+a2ensite chiara
+</pre></div>
+</div>
+</li>
+</ol>
+<ol class="arabic" id="default-conf" start="6">
+<li><p class="first">Modify your default configuration <em>/etc/apache2/sites-available/000-default.conf</em> by adding the following to it: <a class="reference download internal" href="_downloads/000-default.conf"><tt class="xref download docutils literal"><span class="pre">000-default.conf</span></tt></a></p>
+</li>
+<li><p class="first">Create a Chiara directory in Apache&#8217;s home.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mkdir</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">www</span><span class="o">/</span><span class="n">chiara</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Link Chiara webdav to Apache. <em>&lt;path-to-chiara&gt;</em> means the path where Chiara is located (e.g. <em>/qnap/chiara</em>).</p>
+<div class="highlight-python"><div class="highlight"><pre>ln -s &lt;path-to-chiara&gt;/src/webdav /var/www/chiara/webdav
+</pre></div>
+</div>
+</li>
+<li><p class="first">Add user and group <em>chiara</em> and set permissions.</p>
+<div class="highlight-python"><div class="highlight"><pre>addgroup chiara
+
+adduser chiara --ingroup chiara
+
+usermod -aG chiara chiara
+
+usermod -aG chiara www-data
+
+chown -cR www-data:chiara &lt;path-to-chiara&gt;
+
+find &lt;path-to-chiara&gt; -exec chmod 775 {} +
+</pre></div>
+</div>
+</li>
+<li><p class="first"><a class="reference internal" href="#install-configure-chiara">Install &amp; configure Chiara</a>.</p>
+</li>
+<li><p class="first">Restart apache:</p>
+<div class="highlight-python"><div class="highlight"><pre>service apache2 restart
+</pre></div>
+</div>
+</li>
+<li><p class="first">Open your browser and insert your server adress configured in <a class="reference internal" href="#chiara-conf">chiara.conf</a> to check if it works (e.g. <em>http://130.83.212.83/chiara</em>).</p>
+</li>
+</ol>
+</div>
+<div class="section" id="install-configure-chiara">
+<h2><a class="toc-backref" href="#id7">Install &amp; configure Chiara</a><a class="headerlink" href="#install-configure-chiara" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="install-requirements">
+<h3><a class="toc-backref" href="#id8">Install requirements</a><a class="headerlink" href="#install-requirements" title="Permalink to this headline">¶</a></h3>
+<p>You need pip for installing the requirements of Chiara. If you do not have it, you can install it with:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo apt-get install python-pip
+</pre></div>
+</div>
+<p>Navigate to <em>&lt;path-to-chiara&gt;/requirements/pip</em> and execute:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo pip install -r common.txt
+</pre></div>
+</div>
+</div>
+<div class="section" id="configure-chiara">
+<h3><a class="toc-backref" href="#id9">Configure Chiara</a><a class="headerlink" href="#configure-chiara" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p class="first">Next you have to configure Chiara. The configuration file is located at <em>&lt;path-to-chiara&gt;/src/chiara/settings/local.py</em>. Adapt this file to your personal interest. The important setting parameters are:</p>
+<dl class="docutils">
+<dt><strong>SERVER_ADDRESS</strong></dt>
+<dd><p class="first last">The URL of the server (e.g. &#8216;130.83.212.83&#8217;).</p>
+</dd>
+<dt><strong>DATABASES</strong></dt>
+<dd><p class="first">The database configuration. If you want to use SQLite, set:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;default&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s">&#39;ENGINE&#39;</span><span class="p">:</span> <span class="s">&#39;django.db.backends.sqlite3&#39;</span><span class="p">,</span>
+        <span class="s">&#39;NAME&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PROJECT_DIR</span><span class="p">,</span> <span class="s">&#39;db.sqlite3&#39;</span><span class="p">),</span>
+        <span class="s">&#39;USER&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+        <span class="s">&#39;PASSWORD&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+        <span class="s">&#39;HOST&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span>             <span class="c"># Empty for localhost.</span>
+        <span class="s">&#39;PORT&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">,</span>             <span class="c"># Empty string for default.</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p class="last">If you want to use an other database, look at <a class="reference external" href="https://docs.djangoproject.com/en/1.6/ref/databases/">https://docs.djangoproject.com/en/1.6/ref/databases/</a>.</p>
+</dd>
+<dt><strong>STATIC_ROOT</strong></dt>
+<dd><p class="first last">The location, where the static files (like CSS, JavaScript, Images) are located. This depends on your configuration in <a class="reference internal" href="#chiara-conf">chiara.conf</a>. (e.g. <em>/var/www/chiara/static/</em>)</p>
+</dd>
+<dt><strong>STATIC_URL</strong></dt>
+<dd><p class="first last">The URL for static files. (e.g. <em>/chiara/static/</em>)</p>
+</dd>
+</dl>
+</li>
+</ol>
+<blockquote id="code-admin">
+<div><dl class="docutils">
+<dt><strong>CODE_ADMIN</strong></dt>
+<dd>The Chiara user name of the code admin.</dd>
+</dl>
+</div></blockquote>
+<ol class="arabic" start="2">
+<li><p class="first">Navigate to <em>&lt;path-to-chiara&gt;/src/</em>.</p>
+</li>
+<li><p class="first">You have to execute the following command for creating the database. After you were asked to create a new superuser, answer with <em>yes</em> and follow the instructions. It is important to enter the same user name which is configured as <a class="reference internal" href="#code-admin">CODE_ADMIN</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo ./manage.py syncdb --all
+</pre></div>
+</div>
+</li>
+<li><p class="first">Move the static files of Chiara into the apache directory with:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo ./manage.py collectstatic
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="administration">
+<h3><a class="toc-backref" href="#id10">Administration</a><a class="headerlink" href="#administration" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p class="first">For managing users, groups, collections, etc. you have to log in Chiara.</p>
+</li>
+<li><p class="first">Click the <strong>Administration</strong> tab in the footbar.</p>
+</li>
+<li><p class="first">All data of the database can be managed in the displayed administration interface. If you want to add a new user, you have to do the following additionally. Append the file <em>/etc/fstab</em> with:</p>
+<div class="highlight-python"><div class="highlight"><pre>http://localhost/owncloud/remote.php/webdav &lt;path-to-chiara&gt;/src/webdav/&lt;chiara-username&gt;/ownCloud davfs user,noauto,rw 0 0
+</pre></div>
+</div>
+<p>But you have to replace <em>&lt;path-to-chiara&gt;</em> and <em>&lt;chiara-username&gt;</em>.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="section" id="overview-implementation-of-chiara">
+<h2><a class="toc-backref" href="#id11">Overview: Implementation of Chiara</a><a class="headerlink" href="#overview-implementation-of-chiara" title="Permalink to this headline">¶</a></h2>
+<p>Chiara is implemented in the web application framework <em>Django</em>. The documentation is written in <em>reStructuredText</em>.</p>
+<div class="section" id="django">
+<h3><a class="toc-backref" href="#id12">Django</a><a class="headerlink" href="#django" title="Permalink to this headline">¶</a></h3>
+<p>There are three django applications of the <em>Django</em> project:</p>
+<dl class="docutils">
+<dt><strong>authentication</strong></dt>
+<dd>This app manages all users and groups with their permissions to the collection. It is also responsible for authentication on the chiara webpage.</dd>
+<dt><strong>collection</strong></dt>
+<dd>This app contains the structure and logic of collections and their directories, files, tags, etc.</dd>
+<dt><strong>log</strong></dt>
+<dd>This app contains all news (like adding or updating a collection).</dd>
+</dl>
+</div>
+<div class="section" id="restructeredtext">
+<h3><a class="toc-backref" href="#id13">reStructeredText</a><a class="headerlink" href="#restructeredtext" title="Permalink to this headline">¶</a></h3>
+<p>The chiara html documentation is located in <em>&lt;path-to-chiara&gt;/doc</em> and is linked to <em>&lt;path-to-chiara&gt;/web/doc</em>. It will be built with <em>reStructeredText</em> and compiled with <em>Sphinx</em>. If you want to install Sphinx, you can do this as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre>sudo apt-get install sphinx-common sphinxbase-utils sphinx-doc sphinxsearch
+</pre></div>
+</div>
+<p>The <em>index.rst</em> is the main file and combine all documentation parts like <em>use-of-chiara.rst</em>, <em>setup-chiara.rst</em>, etc.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Setting up Chiara</a><ul>
+<li><a class="reference internal" href="#compatibility">Compatibility</a></li>
+<li><a class="reference internal" href="#setup-per-remote-access">Setup per remote access</a><ul>
+<li><a class="reference internal" href="#linux-mac-os-x">Linux/Mac Os X</a></li>
+<li><a class="reference internal" href="#windows">Windows</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#install-configure-apache">Install &amp; configure Apache</a></li>
+<li><a class="reference internal" href="#install-configure-chiara">Install &amp; configure Chiara</a><ul>
+<li><a class="reference internal" href="#install-requirements">Install requirements</a></li>
+<li><a class="reference internal" href="#configure-chiara">Configure Chiara</a></li>
+<li><a class="reference internal" href="#administration">Administration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#overview-implementation-of-chiara">Overview: Implementation of Chiara</a><ul>
+<li><a class="reference internal" href="#django">Django</a></li>
+<li><a class="reference internal" href="#restructeredtext">reStructeredText</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="use-of-chiara.html"
+                        title="previous chapter">How to use Chiara</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="designgoals.html"
+                        title="next chapter">Design goals for Chiara</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/setup-chiara.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="designgoals.html" title="Design goals for Chiara"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="use-of-chiara.html" title="How to use Chiara"
+             >previous</a> |</li>
+        <li><a href="index.html">Chiara 2.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Moritz Maus &amp; Dominik Reis.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

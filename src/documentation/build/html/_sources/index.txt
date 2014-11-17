@@ -11,7 +11,13 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   use-of-chiara.rst
 
+   setup-chiara.rst
+
+   designgoals.rst
+
+   version.rst
 
 Indices and tables
 ==================
