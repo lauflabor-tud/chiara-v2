@@ -167,6 +167,9 @@ def operations(request):
             collection = Collection()
             collection.push_local_revision(request.user, utils.path.url_decode(post["rel_dir_path"]), prev_col, post["comment"])
             message = "You have successfully pushed the local revision of '" + collection.directory.name + "' to the repository!"
+        except CollectionIsUpdatedException:
+            message = "The collection is updated by someone else at the moment!"
+            error = True
         except NoLocalChangesException: 
             message = "There are no local changes of this collection in your webfolder!"
             error = True

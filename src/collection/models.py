@@ -4,6 +4,7 @@ from django.db.models import Max
 from django.core.exceptions import ObjectDoesNotExist
 import os, utils.path, utils.hash, re, sys, datetime, subprocess
 import shutil, ConfigParser
+from sets import Set
 from chiara.settings.common import WEBDAV_DIR, COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE, COLLECTION_TRAITS_FILE, REPOSITORY_DIR, BASH_DIR
 from chiara.settings.local import PUBLIC_USER, OWNCLOUD_DIR_NAME
 from authentication.models import User, UserPermission, GroupPermission, Subscription
@@ -22,6 +23,8 @@ class Collection(models.Model):
     and files. It contains a root directory with the name, revision
     and further information."""
 
+    update_flags = Set()
+        
     identifier = models.IntegerField(verbose_name=u'ID')
     revision = models.IntegerField(verbose_name=u'revision')
 
@@ -51,6 +54,19 @@ class Collection(models.Model):
     @property
     def topics(self):
         return [t.value for t in self.tags.filter(key=enum.Tag.TOPIC)]
+    
+    def add_update_flag(self):
+        """Add update flag that nobody else can update the collection at the same time."""
+        Collection.update_flags.add(self.identifier)
+        
+    def remove_update_flag(self):
+        """Add update flag."""
+        if self.identifier in Collection.update_flags:
+            Collection.update_flags.remove(self.identifier)
+        
+    def is_updated(self):
+        """Check if the collection is updated at the moment."""
+        return self.identifier in Collection.update_flags
     
     def get_revision(self, revision):
         """Returns the collection with the given revision. If the revision greater than
@@ -214,6 +230,12 @@ class Collection(models.Model):
     def push_local_revision(self, user, rel_path, prev_col, comment):
         """Push the local revision to the repository."""
         
+        # set update flag
+        if prev_col.is_updated():
+            raise CollectionIsUpdatedException()
+        else:
+            prev_col.add_update_flag()
+        
         prev_max_revision = Collection.objects.filter(identifier=prev_col.identifier).aggregate(Max('revision'))['revision__max']
         
         # collection is at newest revision
@@ -272,6 +294,9 @@ class Collection(models.Model):
         # collection is not at newest revision
         else:
             raise NotNewestRevisionException()
+        
+        # remove update flag
+        prev_col.remove_update_flag()
         
             
     def download(self, user, rel_path):
