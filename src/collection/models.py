@@ -1,21 +1,26 @@
 from __future__ import division
+
+import logging
+import os, utils.path, utils.hash, re, sys, datetime, subprocess
+from sets import Set
+import shutil, ConfigParser
+from subprocess import Popen, PIPE, STDOUT
+
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, IntegrityError
 from django.db.models import Max
-from django.core.exceptions import ObjectDoesNotExist
-import os, utils.path, utils.hash, re, sys, datetime, subprocess
-import shutil, ConfigParser
-from sets import Set
+
+from authentication.models import User, UserPermission, GroupPermission, Subscription
 from chiara.settings.common import WEBDAV_DIR, COLLECTION_INFO_DIR, COLLECTION_DESCRIPTION_FILE, COLLECTION_TRAITS_FILE, REPOSITORY_DIR, BASH_DIR
 from chiara.settings.local import PUBLIC_USER, OWNCLOUD_DIR_NAME
-from authentication.models import User, UserPermission, GroupPermission, Subscription
+from collection import info
+from exception.exceptions import *
 from log.models import News
 from utils import enum
 import utils.date
-from collection import info
-from exception.exceptions import *
+from utils.decorator import updateCollectionFlag
 
 
-import logging
 logger = logging.getLogger(__name__)
     
 class Collection(models.Model):
@@ -227,15 +232,10 @@ class Collection(models.Model):
         news.save()
 
     
+    @updateCollectionFlag
     def push_local_revision(self, user, rel_path, prev_col, comment):
         """Push the local revision to the repository."""
-        
-        # set update flag
-        if prev_col.is_updated():
-            raise CollectionIsUpdatedException()
-        else:
-            prev_col.add_update_flag()
-        
+               
         prev_max_revision = Collection.objects.filter(identifier=prev_col.identifier).aggregate(Max('revision'))['revision__max']
         
         # collection is at newest revision
@@ -294,9 +294,6 @@ class Collection(models.Model):
         # collection is not at newest revision
         else:
             raise NotNewestRevisionException()
-        
-        # remove update flag
-        prev_col.remove_update_flag()
         
             
     def download(self, user, rel_path):
@@ -716,7 +713,6 @@ class Tag(models.Model):
         verbose_name_plural = "tags"
         
 
-from subprocess import Popen, PIPE, STDOUT
 
 class WebFolder():
     """Represent the webfolder of each user."""
