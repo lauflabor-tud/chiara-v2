@@ -72,12 +72,13 @@
 <li><a class="reference internal" href="#install-configure-chiara" id="id7">Install &amp; configure Chiara</a><ul>
 <li><a class="reference internal" href="#install-requirements" id="id8">Install requirements</a></li>
 <li><a class="reference internal" href="#configure-chiara" id="id9">Configure Chiara</a></li>
-<li><a class="reference internal" href="#administration" id="id10">Administration</a></li>
+<li><a class="reference internal" href="#integrate-owncloud" id="id10">Integrate ownCloud</a></li>
+<li><a class="reference internal" href="#administration" id="id11">Administration</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#overview-implementation-of-chiara" id="id11">Overview: Implementation of Chiara</a><ul>
-<li><a class="reference internal" href="#django" id="id12">Django</a></li>
-<li><a class="reference internal" href="#restructeredtext" id="id13">reStructeredText</a></li>
+<li><a class="reference internal" href="#overview-implementation-of-chiara" id="id12">Overview: Implementation of Chiara</a><ul>
+<li><a class="reference internal" href="#django" id="id13">Django</a></li>
+<li><a class="reference internal" href="#restructeredtext" id="id14">reStructeredText</a></li>
 </ul>
 </li>
 </ul>
@@ -259,27 +260,32 @@ find &lt;path-to-chiara&gt; -exec chmod 775 {} +
 </li>
 </ol>
 </div>
-<div class="section" id="administration">
-<h3><a class="toc-backref" href="#id10">Administration</a><a class="headerlink" href="#administration" title="Permalink to this headline">¶</a></h3>
-<ol class="arabic">
-<li><p class="first">For managing users, groups, collections, etc. you have to log in Chiara.</p>
-</li>
-<li><p class="first">Click the <strong>Administration</strong> tab in the footbar.</p>
-</li>
-<li><p class="first">All data of the database can be managed in the displayed administration interface. If you want to add a new user, you have to do the following additionally. Append the file <em>/etc/fstab</em> with:</p>
-<div class="highlight-python"><div class="highlight"><pre>http://localhost/owncloud/remote.php/webdav &lt;path-to-chiara&gt;/src/webdav/&lt;chiara-username&gt;/ownCloud davfs user,noauto,rw 0 0
+<div class="section" id="integrate-owncloud">
+<h3><a class="toc-backref" href="#id10">Integrate ownCloud</a><a class="headerlink" href="#integrate-owncloud" title="Permalink to this headline">¶</a></h3>
+<p>For integrating ownCloud to Chiara, you have to append the file <em>/etc/fstab</em> with:</p>
+<div class="highlight-python"><div class="highlight"><pre>&lt;path-of-ownCloud-webdav&gt; &lt;path-to-chiara&gt;/src/webdav/&lt;chiara-username&gt;/ownCloud davfs user,noauto,rw 0 0
 </pre></div>
 </div>
-<p>But you have to replace <em>&lt;path-to-chiara&gt;</em> and <em>&lt;chiara-username&gt;</em>.</p>
-</li>
+<div class="line-block">
+<div class="line">But you have to replace <em>&lt;path-of-ownCloud-webdav&gt;</em>, <em>&lt;path-to-chiara&gt;</em> and <em>&lt;chiara-username&gt;</em>.</div>
+<div class="line"><em>&lt;path-of-ownCloud-webdav&gt;</em> is <a class="reference external" href="http://localhost/owncloud/remote.php/webdav">http://localhost/owncloud/remote.php/webdav</a> for example.</div>
+</div>
+</div>
+<div class="section" id="administration">
+<h3><a class="toc-backref" href="#id11">Administration</a><a class="headerlink" href="#administration" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>For managing users, groups, collections, etc. you have to log in Chiara.</li>
+<li>Click the <strong>Administration</strong> tab in the footbar.</li>
+<li>All data of the database can be managed in the displayed administration interface.</li>
 </ol>
+<p><em>Note:</em> If you want to add a new user, you have to add the ownCloud path for the new user additionally. See <a class="reference internal" href="#integrate-owncloud">Integrate ownCloud</a>.</p>
 </div>
 </div>
 <div class="section" id="overview-implementation-of-chiara">
-<h2><a class="toc-backref" href="#id11">Overview: Implementation of Chiara</a><a class="headerlink" href="#overview-implementation-of-chiara" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id12">Overview: Implementation of Chiara</a><a class="headerlink" href="#overview-implementation-of-chiara" title="Permalink to this headline">¶</a></h2>
 <p>Chiara is implemented in the web application framework <em>Django</em>. The documentation is written in <em>reStructuredText</em>.</p>
 <div class="section" id="django">
-<h3><a class="toc-backref" href="#id12">Django</a><a class="headerlink" href="#django" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id13">Django</a><a class="headerlink" href="#django" title="Permalink to this headline">¶</a></h3>
 <p>There are three django applications of the <em>Django</em> project:</p>
 <dl class="docutils">
 <dt><strong>authentication</strong></dt>
@@ -291,7 +297,7 @@ find &lt;path-to-chiara&gt; -exec chmod 775 {} +
 </dl>
 </div>
 <div class="section" id="restructeredtext">
-<h3><a class="toc-backref" href="#id13">reStructeredText</a><a class="headerlink" href="#restructeredtext" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id14">reStructeredText</a><a class="headerlink" href="#restructeredtext" title="Permalink to this headline">¶</a></h3>
 <p>The chiara html documentation is located in <em>&lt;path-to-chiara&gt;/doc</em> and is linked to <em>&lt;path-to-chiara&gt;/web/doc</em>. It will be built with <em>reStructeredText</em> and compiled with <em>Sphinx</em>. If you want to install Sphinx, you can do this as follows:</p>
 <div class="highlight-python"><div class="highlight"><pre>sudo apt-get install sphinx-common sphinxbase-utils sphinx-doc sphinxsearch
 </pre></div>
@@ -320,6 +326,7 @@ find &lt;path-to-chiara&gt; -exec chmod 775 {} +
 <li><a class="reference internal" href="#install-configure-chiara">Install &amp; configure Chiara</a><ul>
 <li><a class="reference internal" href="#install-requirements">Install requirements</a></li>
 <li><a class="reference internal" href="#configure-chiara">Configure Chiara</a></li>
+<li><a class="reference internal" href="#integrate-owncloud">Integrate ownCloud</a></li>
 <li><a class="reference internal" href="#administration">Administration</a></li>
 </ul>
 </li>

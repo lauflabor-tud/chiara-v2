@@ -163,16 +163,23 @@ Configure Chiara
     sudo ./manage.py collectstatic
     
 
+Integrate ownCloud
+''''''''''''''''''
+For integrating ownCloud to Chiara, you have to append the file */etc/fstab* with::
+
+   <path-of-ownCloud-webdav> <path-to-chiara>/src/webdav/<chiara-username>/ownCloud davfs user,noauto,rw 0 0
+
+| But you have to replace *<path-of-ownCloud-webdav>*, *<path-to-chiara>* and *<chiara-username>*. 
+| *<path-of-ownCloud-webdav>* is http://localhost/owncloud/remote.php/webdav for example.
+
+
 Administration
 ''''''''''''''
-
 1. For managing users, groups, collections, etc. you have to log in Chiara. 
 #. Click the **Administration** tab in the footbar.
-#. All data of the database can be managed in the displayed administration interface. If you want to add a new user, you have to do the following additionally. Append the file */etc/fstab* with::
-    
-    http://localhost/owncloud/remote.php/webdav <path-to-chiara>/src/webdav/<chiara-username>/ownCloud davfs user,noauto,rw 0 0
-    
-   But you have to replace *<path-to-chiara>* and *<chiara-username>*.
+#. All data of the database can be managed in the displayed administration interface. 
+
+*Note:* If you want to add a new user, you have to add the ownCloud path for the new user additionally. See `Integrate ownCloud`_.
 
 
 Overview: Implementation of Chiara
