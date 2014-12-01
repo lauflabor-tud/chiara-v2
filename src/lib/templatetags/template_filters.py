@@ -23,6 +23,9 @@ class MakeListNode(template.Node):
         context[self.varname] = [ i.resolve(context) for i in self.items ]
         return ""
 
+@register.filter
+def startswith(value, arg):
+    return value.startswith(arg)
 
 @register.filter
 def dict_get(d, key):

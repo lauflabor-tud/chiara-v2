@@ -63,7 +63,7 @@
 	  	{% endif %}
 	  	
 	  	{# List Directories #}
-	  	{% if d.type == "d" %}
+	  	{% if d.type == "d" and not d.name|startswith:"." %}
 	  	<form action={% url 'operations'%} method="post">{% csrf_token %}
 	  	  <tr>
 			<td class="content_listing"><a class="listdir-name" href={{ d.name|urlencode:"" }}> {{ d.name }} </a></td>
@@ -88,12 +88,14 @@
 	  
 	  {# List Files #}
 	  {% for f in files %}
+	  	{% if not f.name|startswith:"." %}
 	    <tr>
 			{% make_list rel_path f.name as rel_file_path_list %}
 			<td class="content_listing"><a class="listfile-name" href={% url 'download_to_disk' rel_file_path_list|url_join|urlencode %}> {{ f.name }} </a></td>
 			<td class="content_listing"> - / {{ f.revision }} / {{ f.size }} </td>
 			<td class="content_listing"> </td>
 	  	</tr>
+	  	{% endif %}
 	  {% endfor %}
 	  
 	  {% else %}
