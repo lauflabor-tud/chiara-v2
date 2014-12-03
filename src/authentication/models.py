@@ -36,7 +36,7 @@ class UserManager(BaseUserManager):
     """Manager for the User model. It is responsible for creating users.
     The manager inherit from the django user manager."""
     
-    def create_user(self, user_name, first_name, last_name, email, password=None):
+    def create_user(self, user_name, first_name, last_name, password, email=None):
         """Creates and saves a User with the given user, first and last name, email
         and password"""
         if not user_name:
@@ -45,8 +45,6 @@ class UserManager(BaseUserManager):
             raise ValueError('Users must have a first name')
         if not last_name:
             raise ValueError('Users must have a last name')
-        if not email:
-            raise ValueError('Users must have an email address')
         
         user = self.model(user_name=user_name,
                           first_name=first_name,
@@ -60,7 +58,7 @@ class UserManager(BaseUserManager):
     
         return user
 
-    def create_superuser(self, user_name, first_name, last_name, email, password):
+    def create_superuser(self, user_name, first_name, last_name, password, email=None):
         """Creates and saves a superuser with the given user, first and last name, email
         and password"""
         user = self.create_user(user_name=user_name,
@@ -85,7 +83,7 @@ class User(AbstractBaseUser):
     user_name = models.CharField(verbose_name=u'user name', max_length=30, unique=True)
     first_name = models.CharField(verbose_name=u'first name', max_length=30)
     last_name = models.CharField(verbose_name=u'last name', max_length=30)
-    email = models.EmailField(verbose_name=u'email address', max_length=120, unique=True, blank=True)
+    email = models.EmailField(verbose_name=u'email address', max_length=120, blank=True, null=True)
     
     is_active = models.BooleanField(verbose_name=u'is active', default=True)
     is_admin = models.BooleanField(verbose_name=u'is admin', default=False)
@@ -102,7 +100,7 @@ class User(AbstractBaseUser):
     objects = UserManager()
 
     USERNAME_FIELD = 'user_name'
-    REQUIRED_FIELDS = ['first_name', 'last_name', 'email']
+    REQUIRED_FIELDS = ['first_name', 'last_name']
     
     @staticmethod
     def get_current_user():

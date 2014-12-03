@@ -28,11 +28,6 @@ COLLECTION_TRAITS_FILE = 'traits'
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '-#1skj4pqxma2-=gl*#uz5jw2nir7u=jv4c(nit79txww9(gel'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-TEMPLATE_DEBUG = True
-
 ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'authentication.User'
