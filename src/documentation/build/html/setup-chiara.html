@@ -157,6 +157,12 @@ a2ensite chiara
 <ol class="arabic" id="default-conf" start="6">
 <li><p class="first">Modify your default configuration <em>/etc/apache2/sites-available/000-default.conf</em> by adding the following to it: <a class="reference download internal" href="_downloads/000-default.conf"><tt class="xref download docutils literal"><span class="pre">000-default.conf</span></tt></a></p>
 </li>
+<li><p class="first">Append the file <em>/etc/apache2/envvars</em> with:</p>
+<div class="highlight-python"><div class="highlight"><pre>export LANG=&#39;en_US.UTF-8&#39;
+export LC_ALL=&#39;en_US.UTF-8&#39;
+</pre></div>
+</div>
+</li>
 <li><p class="first">Create a Chiara directory in Apache&#8217;s home.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">mkdir</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">www</span><span class="o">/</span><span class="n">chiara</span>
 </pre></div>
@@ -184,7 +190,7 @@ find &lt;path-to-chiara&gt; -exec chmod 775 {} +
 </li>
 <li><p class="first"><a class="reference internal" href="#install-configure-chiara">Install &amp; configure Chiara</a>.</p>
 </li>
-<li><p class="first">Restart apache:</p>
+<li><p class="first">Restart apache.</p>
 <div class="highlight-python"><div class="highlight"><pre>service apache2 restart
 </pre></div>
 </div>

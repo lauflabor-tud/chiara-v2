@@ -72,6 +72,11 @@ The following description is for distributions based on *Debian*. You have to ex
  
 6. Modify your default configuration */etc/apache2/sites-available/000-default.conf* by adding the following to it: :download:`000-default.conf <resources/000-default.conf>`
 
+#. Append the file */etc/apache2/envvars* with: ::
+
+    export LANG='en_US.UTF-8'
+    export LC_ALL='en_US.UTF-8'
+
 #. Create a Chiara directory in Apache's home. ::
 
     mkdir /var/www/chiara
@@ -96,7 +101,7 @@ The following description is for distributions based on *Debian*. You have to ex
 
 #. `Install & configure Chiara`_.
 
-#. Restart apache::
+#. Restart apache. ::
 
     service apache2 restart
 
