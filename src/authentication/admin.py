@@ -1,13 +1,26 @@
 import logging
+
 from django import forms
 from django.contrib import admin
-from django.contrib.auth.models import Group as DjangoGroup
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
-from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from authentication.models import User, Group, Membership, UserPermission, GroupPermission, Subscription
+from django.contrib.auth.forms import ReadOnlyPasswordHashField, \
+    AdminPasswordChangeForm
+from django.contrib.auth.models import Group as DjangoGroup
+
 from authentication import models
+from authentication.models import User, Group, Membership, UserPermission, GroupPermission, Subscription
+
 
 logger = logging.getLogger(__name__)
+
+def reset_password(modeladmin, request, queryset):
+    """Action for reseting user passwords in admin interface. 
+    The password will be reseted to the user name"""
+    for user in queryset:
+        user.set_password(user.user_name)
+        user.save()
+reset_password.short_description = "Reset password to user name"
+
 
 class MembershipInline(admin.TabularInline):
     """The MembershipInline is necessary to combine User
@@ -102,6 +115,7 @@ class UserAdmin(DjangoUserAdmin):
     # The forms to add and change user instances
     form = UserChangeForm
     add_form = UserCreationForm
+    change_password_form = AdminPasswordChangeForm
     
     # List groups
     inlines = (MembershipInline, UserPermissionInline, SubscriptionInline)
@@ -127,6 +141,7 @@ class UserAdmin(DjangoUserAdmin):
     search_fields = ('user_name', 'first_name', 'last_name',)
     ordering = ('user_name', 'last_name', 'email')
     filter_horizontal = ()
+    actions = [reset_password]
 
 
 
